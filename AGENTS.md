@@ -2,10 +2,14 @@ Each skill is a folder under `skills/<skill-name>/` containing a `SKILL.md`. The
 
 Supporting files live beside `SKILL.md` in `references/`, `assets/` and `agents/`, and are linked from `SKILL.md` with relative paths.
 
-When you add, rename or remove a skill, update the Skills list in `README.md` (skill name linked to its `SKILL.md`) and add an entry to `CHANGELOG.md`, bumping the version in `package.json`.
+When you add, rename or remove a skill, update the Skills list in `README.md` (skill name linked to its `SKILL.md`). Keep one open entry in `CHANGELOG.md` for the next release and add to it as you go. Bump `package.json` once per release, never per edit.
 
 Run `npm run check-frontmatter` after touching any `SKILL.md`.
 
 Skills must work without any one framework. Put stack-specific code in a clearly named asset folder (for example `assets/<thing>/react/`) and keep it optional.
 
 Never put machine-specific details in a skill: absolute paths, usernames, home directories or lockfile locations.
+
+Code in `assets/` is meant to be read and adapted. Prefer `const` arrow functions, name module-level constants in `SCREAMING_SNAKE_CASE`, use descriptive names (no single letters), and keep every file under 500 lines. Logic shared by more than one starter lives in that skill's `core/`, never copied.
+
+When a skill ships starters for more than one stack, they must behave the same. Run the same checks on each before saying they are aligned.

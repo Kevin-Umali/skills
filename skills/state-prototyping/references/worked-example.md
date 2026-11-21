@@ -1,64 +1,61 @@
 # Worked example: billing settings
 
-A small, invented example of the whole workflow. The domain, state names and counts are placeholders. Take the method, not the details.
+An invented example of the whole workflow. Take the method, not the details.
 
-## The request
-
-"Prototype the billing settings screen of our app so we can review it before we change anything."
-
-The app already exists. It loads the plan from a backend, lets the user change the card, and shows an invoice list.
+**Request:** "Prototype the billing settings screen so we can review it before changing anything." The app exists: it loads the plan from a backend, lets the user change the card, and lists invoices.
 
 ## 1. Explore
 
-Read the real screen and trace where its data and side effects come from:
-
 | Piece | Owner | Boundary |
 | --- | --- | --- |
-| Plan and invoices | `useBilling()` hook | Network request |
+| Plan and invoices | `useBilling()` hook | Network |
 | Card form | `CardDialog` | Payment provider SDK |
-| Invoice PDF download | `InvoiceRow` | Native file save |
+| Invoice PDF | `InvoiceRow` | Native file save |
 
-## 2. Inventory the states
+## 2. Inventory
 
-Group states by area. Each has a stable ID.
-
-| Area | State ID | What it shows |
+| Area | State id | Shows |
 | --- | --- | --- |
 | Page | `page-loading` | Request in flight, held pending |
 | Page | `page-error` | Load failed, retry offered |
 | Page | `page-empty` | New account, no invoices |
-| Card | `card-dialog-open` | Dialog with an empty form |
+| Card | `card-dialog-open` | Empty form |
 | Card | `card-declined` | Provider rejected the card, draft kept |
-| Card | `card-saving` | Submit pending, button spinner, geometry stable |
+| Card | `card-saving` | Submit pending, spinner in the button, same size |
 | Invoices | `invoices-list` | Normal list |
-| Invoices | `invoices-download-unavailable` | Native save is not available in a browser |
+| Invoices | `invoices-download-unavailable` | Native save not available here |
 
-Only branches that change what the user sees get their own state. Derive the real list from the app, not from this table.
+One state per user-visible branch, not per boolean combination.
 
-## 3. Build the preview
+## 3. Build
 
-- Import the real `BillingPage`, `CardDialog` and `InvoiceRow`, their styles and tokens.
-- Replace only the data and side effects: a fixture-owned `useBilling()` that returns fictional, deterministic data, and in-memory callbacks.
-- `page-loading` and `card-saving` stay pending until the reviewer picks another state. No request is made.
-- Submitting a card in `card-declined` keeps the typed draft and shows the decline message, as the real screen does.
-- `invoices-download-unavailable` says plainly that the native save is not available here. It does not pretend a file was saved.
+- Import the real `BillingPage`, `CardDialog` and `InvoiceRow` with their styles and tokens.
+- Fake only data and side effects: a fixture `useBilling()` with fictional deterministic data and in-memory callbacks.
+- `page-loading` and `card-saving` stay pending, with no request.
+- `card-declined` keeps the typed draft and shows the decline, as the real screen does.
+- `invoices-download-unavailable` says the native save is unavailable and fakes no success.
 
-## 4. Review surface
+## 4. Review
 
-Use the [review shell](review-shell.md): states grouped by area in the sidebar, Width and Theme in the top bar, selected-state context row above the preview. The shell sits outside the app's iframe, so the card dialog keeps real focus trapping.
+Run `init-prototype`, fill `states.js` and `notes.js`, run `check-prototype`. Choose Side by side with highlights. After the Card area is changed and approved, add it to `lockedAreas`.
 
-## 5. Iterate
+An entry in the Changes inspector, with the agent's reason from `notes.js`:
 
-The reviewer works area by area. After the Card area is changed and approved, it goes into `lockedAreas`, and later shared style changes must not touch it without asking. Each change is one line in the notes module, for example:
-
-```ts
-states: { 'card-declined': ['Decline message moves under the card number field.'] }
+```text
+3  button #save
+   height   48px → 36px
+   background-color   #4338ca → #21201c
+   Why: One black primary action says "do this next". Indigo had no brand behind it.
 ```
+
+```js
+{ selector: '#save', props: ['background-color'], why: 'One black primary action says "do this next".' }
+```
+
+## 5. Perspectives
+
+For `card-declined`: the user sees what to do and keeps what they typed. The developer maps the provider SDK's error codes before shipping. The agent finds the decline announced as an alert and a Retry button that names the next action. Failures become fixes or report lines.
 
 ## 6. Report
 
-State what was checked and what was not:
-
-- Checked: every state above at Desktop and Phone widths, light and dark themes, keyboard focus in the dialog.
-- Not verified: the payment provider SDK, the native file save and real network behavior. The browser fixtures do not cover them.
-- Production source was not changed.
+Checked: every state at Desktop and Phone widths, both themes, dialog keyboard focus. Not verified: the payment SDK, native file save, real network. Production source unchanged.
