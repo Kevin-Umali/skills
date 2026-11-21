@@ -7,8 +7,8 @@ import { getVisibleChangeIndexes } from '../core/review-reducer.js';
 import { createButton, createElement, createList } from './dom.js';
 
 const createSummary = (state) => {
-  if (state.isMeasuring) return createElement('p', { className: 'rs-hint', text: 'Measuring both previews…' });
-  if (!state.diff) return createElement('p', { className: 'rs-hint', text: 'Waiting for the previews to load.' });
+  if (state.measureError) return createElement('p', { className: 'rs-why rs-why--missing', text: state.measureError, attributes: { role: 'alert' } });
+  if (!state.diff) return createElement('p', { className: 'rs-hint', text: state.isMeasuring ? 'Measuring both previews…' : 'Waiting for the previews to load.' });
   const elements = pluralize(state.diff.entries.length, 'element');
   const properties = pluralize(countChangedProperties(state.diff.entries), 'property', 'properties');
   return createElement('p', { className: 'rs-summary', text: `${elements} · ${properties} changed` });

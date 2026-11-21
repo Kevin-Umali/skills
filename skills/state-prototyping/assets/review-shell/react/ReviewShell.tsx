@@ -20,8 +20,7 @@ interface ReviewShellProps {
   reasons: Reason[];
 }
 
-// Complete review shell. It matches the vanilla starter: same reducer, same measured diff, same markup and styles.
-export const ReviewShell = ({ areas, states, notes, reasons }: ReviewShellProps) => {
+const ReviewShellContent = ({ areas, states, notes, reasons }: ReviewShellProps) => {
   const [state, dispatch] = useReviewState(states);
   const frames = useRef<FrameRefs>({ before: null, after: null, probe: null });
   useDiffSession({ frames, state, dispatch, reasons });
@@ -69,3 +68,10 @@ export const ReviewShell = ({ areas, states, notes, reasons }: ReviewShellProps)
     </ReviewContext.Provider>
   );
 };
+
+// Complete review shell. It matches the vanilla starter: same reducer, same measured diff, same markup and styles.
+export const ReviewShell = (props: ReviewShellProps) => (
+  props.states.length
+    ? <ReviewShellContent {...props} />
+    : <p>states.js has no states yet. Add the first one, then reload.</p>
+);

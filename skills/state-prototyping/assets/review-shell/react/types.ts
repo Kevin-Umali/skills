@@ -14,9 +14,11 @@ export interface PrototypeState {
   area: string;
   label: string;
   description: string;
-  owner: string;
-  boundary: string;
-  limits: string;
+  // Optional: the fixture details show a dash for any left out, and check-prototype warns about them.
+  owner?: string;
+  boundary?: string;
+  limits?: string;
+  fixture?: unknown;
 }
 
 export interface Notes {
@@ -67,6 +69,7 @@ export interface ReviewState {
   resetCount: number;
   diff: Diff | null;
   isMeasuring: boolean;
+  measureError: string | null;
   selectedChange: number | null;
   hoveredChange: number | null;
   categoryFilter: string;

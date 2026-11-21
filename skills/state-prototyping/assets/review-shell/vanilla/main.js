@@ -16,6 +16,12 @@ import { createTopBar } from './top-bar.js';
 // These actions change what the previews render, so the diff is measured again.
 const MEASURE_TRIGGER_ACTIONS = new Set(['select-state', 'set-view', 'reset-preview']);
 
+// An empty registry has nothing to review. Say so instead of failing with a stack trace.
+if (!states.length) {
+  document.body.textContent = 'states.js has no states yet. Add the first one, then reload.';
+  throw new Error('states.js has no states.');
+}
+
 const isNarrowWindow = matchMedia(NARROW_WINDOW_QUERY).matches;
 const store = createStore(reviewReducer, createInitialState(readViewFromSearch(location.search, states, !isNarrowWindow)));
 const { dispatch, getState, subscribe } = store;

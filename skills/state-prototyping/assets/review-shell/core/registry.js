@@ -1,5 +1,8 @@
 // Pure helpers over the state registry and the notes module. No DOM, no framework.
 
+// Fixture details show a dash for a field the registry leaves out.
+export const orDash = (value) => value || '—';
+
 export const findState = (states, stateId) => states.find((state) => state.id === stateId) ?? states[0];
 
 export const getAreaLabel = (areas, areaId) => areas.find((area) => area.id === areaId)?.label ?? areaId;

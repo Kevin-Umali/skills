@@ -45,6 +45,7 @@ export const DIFF_AFTER_INTERACTION_MS = 350;
 export const DIFF_AFTER_RESIZE_MS = 250;
 export const DIFF_SETTLE_POLL_MS = 100;
 export const DIFF_SETTLE_MAX_POLLS = 30;
+export const DIFF_READY_MAX_POLLS = 50;
 export const DIFF_SETTLE_PAUSE_MS = 60;
 export const COPY_NOTICE_MS = 2200;
 

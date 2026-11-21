@@ -31,7 +31,7 @@ export const useDiffSession = ({ frames, state, dispatch, reasons }: UseDiffSess
       getMeasuredFrames,
       getReasons: () => reasons,
       onStart: () => dispatch({ type: 'measuring' }),
-      onResult: (diff: unknown) => dispatch({ type: 'diff-ready', diff }),
+      onResult: (diff: unknown, message?: string) => dispatch(message ? { type: 'diff-failed', message } : { type: 'diff-ready', diff }),
       onLayoutChange: () => setLayoutTick((tick) => tick + 1),
       isEnabled: () => CHANGES_ACTIVE,
     });

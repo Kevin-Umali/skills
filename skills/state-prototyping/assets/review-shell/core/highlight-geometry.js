@@ -46,8 +46,10 @@ export const buildHighlightBoxes = (diff, side, options) => {
   if (!diff || scope === 'none') return [];
   const elementKey = side === 'after' ? 'afterElement' : 'beforeElement';
   const boxes = diff.entries
-    .map((entry, index) => ({ index, side, rect: toBoxRect(entry[elementKey]) }))
-    .filter((box) => scope === 'all' || box.index === options.selectedChange);
+    .map((entry, index) => ({ index, element: entry[elementKey], side }))
+    .filter((box) => box.element.isConnected) // the preview re-rendered and dropped this element
+    .filter((box) => scope === 'all' || box.index === options.selectedChange)
+    .map(({ index, element }) => ({ index, side, rect: toBoxRect(element) }));
   return placeBadges(boxes);
 };
 

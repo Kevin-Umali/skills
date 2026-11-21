@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { findState, getAdjacentState, getAreaLabel } from '../../core/registry.js';
+import { findState, getAdjacentState, getAreaLabel, orDash } from '../../core/registry.js';
 import { useReview } from '../review-context';
 
 const POPOVER_TITLES = { details: 'Fixture details', 'copy-link': 'Copy link' };
@@ -69,7 +69,7 @@ export const Navigator = () => {
           {state.popover === 'details' && (
             <dl>
               {([['Description', current.description], ['ID', current.id], ['Source owner', current.owner], ['Boundary', current.boundary], ['Limits', current.limits]] as const).map(([term, description]) => (
-                <div key={term} style={{ display: 'contents' }}><dt>{term}</dt><dd>{description}</dd></div>
+                <div key={term} style={{ display: 'contents' }}><dt>{term}</dt><dd>{orDash(description)}</dd></div>
               ))}
             </dl>
           )}

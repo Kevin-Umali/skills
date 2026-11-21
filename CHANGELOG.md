@@ -7,6 +7,9 @@
 - `init-prototype` also writes placeholder `before/frame.html` and `after/frame.html` pages that read `state`, `theme` and `reset`.
 - `check-prototype` no longer asks for `before/frame.html` in single-preview mode. Fixed the `hidden` attribute being overridden by flex in the shell CSS.
 - Skill text now says to serve the shell over HTTP, record unencoded substates in `limits`, and scale the work to the task.
+- Shell hardening: re-measuring after you use a preview keeps your selected change and the last diff instead of resetting them; outlines skip elements the preview removed; a preview that cannot be measured now says so instead of showing "Measuring…" forever; fixture details show a dash for missing fields; an empty registry says so.
+- `check-prototype` errors on an empty registry and warns about missing `owner`, `boundary`, `limits` or `fixture` and ids that are not lowercase and hyphenated, so prototypes come out consistent.
+- Less to read: `review-shell.md` is now a short setup guide and the full behavior moved to `shell-spec.md`, which is read only to change the shell. `SKILL.md` says when to read each reference. A typical new-UI run reads about 12.7 KB instead of about 17.5 KB.
 - Found by running the original and current skill on the same task. In that trial the fixed skill used fewer tokens and tool calls than either earlier run.
 
 ## 0.1.2

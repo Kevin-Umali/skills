@@ -1,7 +1,7 @@
 // Floating navigator at the bottom centre: Previous, the selected state (opens its fixture details), Next.
 // It also owns Copy link, whose button lives in the top bar.
 import { COPY_NOTICE_MS } from '../core/constants.js';
-import { findState, getAdjacentState, getAreaLabel } from '../core/registry.js';
+import { findState, getAdjacentState, getAreaLabel, orDash } from '../core/registry.js';
 import { byId, createElement } from './dom.js';
 
 const POPOVER_TITLES = { details: 'Fixture details', 'copy-link': 'Copy link' };
@@ -15,7 +15,7 @@ export const createNavigator = ({ areas, states, dispatch, getState }) => {
   const renderDetails = (state) => {
     const definitionList = createElement('dl');
     [['Description', state.description], ['ID', state.id], ['Source owner', state.owner], ['Boundary', state.boundary], ['Limits', state.limits]].forEach(([term, description]) => {
-      definitionList.append(createElement('dt', { text: term }), createElement('dd', { text: description }));
+      definitionList.append(createElement('dt', { text: term }), createElement('dd', { text: orDash(description) }));
     });
     popover.replaceChildren(definitionList);
   };

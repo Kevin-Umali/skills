@@ -21,7 +21,7 @@ Ask once. With a structured question tool (for example `AskUserQuestion`), use o
 
 0. **What to prototype.** If the request is vague (for example only `/state-prototyping table`), settle this first: which screen or flow, new UI or existing, and which states matter. Search the workspace for the named component or route and offer what you find as the default. Ask only what you cannot find out.
 1. **Design references.** Use `detect-context`. Ask only if none are found or they conflict; accept a path or link.
-2. **Helpers.** Offer the relevant skills and MCP servers from the [catalog](references/catalog.md). The user may name their own. "None" is valid.
+2. **Helpers.** Offer the relevant skills and MCP servers from the [catalog](references/catalog.md) (read it only when offering). The user may name their own. "None" is valid.
 3. **Before and After.** Existing UI: ask for a frozen Before beside an editable After. Default: one editable preview. New UI: ask only if there are versions to compare. No comparison: pass `--no-comparison` to `init-prototype`; the single preview is `after/frame.html` and highlights switch off with it.
 4. **Highlights.** Needs a comparison. Show what changed (outlines, measured diff list)? Yes: build and enable it. No: pass `--no-highlights` to `init-prototype` and build none of it. Default: yes when comparing.
 
@@ -31,10 +31,10 @@ Shell stack: default from `detect-context` (a React project gets `react`, anythi
 
 Scale to the task: a small UI needs a handful of states and a short coverage note. Without highlights, `notes.js` can stay empty.
 
-1. **Explore.** Existing UI: run the app, read screens, design system, components, state owners, callbacks, error and recovery paths, down to network, native and persistence boundaries. New UI: read the design system and integration contracts, and separate requested behavior from assumptions. Build an evidence-based state inventory ([exploration and verification](references/exploration-and-verification.md)).
+1. **Explore.** Existing UI: run the app, read screens, design system, components, state owners, callbacks, error and recovery paths, down to network, native and persistence boundaries. New UI: read the design system and integration contracts, and separate requested behavior from assumptions. Build an evidence-based state inventory. For existing UI, read [exploration and verification](references/exploration-and-verification.md) first; a new UI does not need it.
 2. **Import the real UI.** Existing UI: import production screens, dialogs, controls, styles and tokens. Replace only data and side effects with typed fixtures and local callbacks. Trace nested containers and use prototype-scoped adapters that render the real children. Never recreate markup, layouts from screenshots, or lookalike dialogs. If something cannot be isolated, mark that state unavailable and name the boundary. Record imports, fixture controllers, proposed changes and unavailable behavior. New UI: nothing to import. Derive states from requested behavior, label design assumptions, and set each state's `owner` to "Prototype (new UI)".
 3. **Model the states.** Loading, empty, error, saving, stopped, success, conflict, plus labeled proposed states. Fictional deterministic fixtures, in-memory callbacks, stable held-pending samples. Keep real validation, disabled actions, drafts and recovery. No live calls, native operations, credentials or persistence. Never fake a provider response.
-4. **Build the review shell.** Run `init-prototype` with the stack and the flags the answers call for, fill the frame pages, then follow the [review shell](references/review-shell.md).
+4. **Build the review shell.** Run `init-prototype` with the stack and the flags the answers call for, then follow [review shell](references/review-shell.md), which is short. Read [shell-spec](references/shell-spec.md) only to change the shell or write another stack.
 5. **Think from three perspectives.** Decide and critique as the user, the developer who will build it, and an agent that operates or reads it ([perspectives](references/perspectives.md)). It adds nothing to the shell. Say which one drove a notable decision.
 6. **Inspect.** Run it locally. Check states, widths, themes, keyboard focus and interactions through DOM, computed-style and behavior checks. No screenshots or bulky evidence unless asked. Report concise results and limits: fixtures do not verify native, live or persisted behavior. After approved changes land, remove only obsolete prototype files.
 
@@ -56,3 +56,5 @@ The shell and the product are separate designs. Keep the preferred layout's stru
 ## Helpers
 
 Use only what the user chose. Read each skill first and never claim one you did not read or could not use. If one is missing, offer it and ask before installing or connecting; never guess a source. Helpers do not authorize a redesign. Review criteria for errors and pending states: a toast plus a minimal indicator for action errors, inline validation or a blocking load where fitting, spinners inside buttons with stable geometry. They never replace real app behavior.
+
+Not sure what a step should look like? See the [worked example](references/worked-example.md).

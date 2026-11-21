@@ -32,7 +32,7 @@ export const createInspector = ({ states, notes, dispatch }) => {
   const render = (state) => {
     root.dataset.inspector = state.isInspectorOpen ? 'open' : 'closed';
     announceSelection(state);
-    const key = [state.isInspectorOpen, state.stateId, getObjectId(state.diff), state.isMeasuring, state.selectedChange, state.categoryFilter, state.isInspecting].join('|');
+    const key = [state.isInspectorOpen, state.stateId, getObjectId(state.diff), state.isMeasuring, state.measureError, state.selectedChange, state.categoryFilter, state.isInspecting].join('|');
     if (key === previousKey) return;
     previousKey = key;
     const panel = renderChangesPanel({ state, current: findState(states, state.stateId), notes, dispatch });

@@ -9,6 +9,7 @@ export const createInitialState = (view) => ({
   resetCount: 0,
   diff: null,
   isMeasuring: false,
+  measureError: null,
   selectedChange: null,
   hoveredChange: null,
   categoryFilter: 'all',
@@ -16,6 +17,16 @@ export const createInitialState = (view) => ({
   isInspectorOpen: false,
   popover: null,
 });
+
+// Everything measured is stale once the previews show something else.
+const clearedChanges = { diff: null, isMeasuring: false, measureError: null, selectedChange: null, hoveredChange: null };
+
+// After a re-measure, keep the selected change selected if the same element still differs.
+const findSameChange = (state, nextDiff) => {
+  const selectedKey = state.diff?.entries[state.selectedChange]?.key;
+  const nextIndex = selectedKey ? nextDiff.entries.findIndex((entry) => entry.key === selectedKey) : -1;
+  return nextIndex === -1 ? null : nextIndex;
+};
 
 const toggleItem = (items, item) => (items.includes(item) ? items.filter((existing) => existing !== item) : [...items, item]);
 
@@ -32,12 +43,10 @@ export const reviewReducer = (state, action) => {
         ...state,
         stateId: action.stateId,
         collapsedAreaIds: state.collapsedAreaIds.filter((areaId) => areaId !== action.areaId),
-        diff: null,
-        selectedChange: null,
-        hoveredChange: null,
+        ...clearedChanges,
       };
     case 'set-view':
-      return { ...state, [action.key]: action.value };
+      return { ...state, [action.key]: action.value, ...clearedChanges };
     case 'toggle-highlight':
       return { ...state, highlight: !state.highlight };
     case 'set-query':
@@ -45,11 +54,14 @@ export const reviewReducer = (state, action) => {
     case 'toggle-area':
       return { ...state, collapsedAreaIds: toggleItem(state.collapsedAreaIds, action.areaId) };
     case 'reset-preview':
-      return { ...state, resetCount: state.resetCount + 1 };
+      return { ...state, resetCount: state.resetCount + 1, ...clearedChanges };
     case 'measuring':
-      return { ...state, isMeasuring: true, diff: null, selectedChange: null, hoveredChange: null };
+      // Keep the last diff and selection while measuring again, so using a preview does not reset the reviewer's place.
+      return { ...state, isMeasuring: true, measureError: null };
     case 'diff-ready':
-      return { ...state, isMeasuring: false, diff: action.diff, selectedChange: null };
+      return { ...state, isMeasuring: false, measureError: null, diff: action.diff, selectedChange: findSameChange(state, action.diff) };
+    case 'diff-failed':
+      return { ...state, isMeasuring: false, diff: null, selectedChange: null, hoveredChange: null, measureError: action.message };
     case 'select-change':
       return { ...state, selectedChange: action.index, hoveredChange: null };
     case 'hover-change':

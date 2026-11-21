@@ -9,8 +9,8 @@ import type { DiffEntry } from '../types';
 
 const Summary = () => {
   const { state } = useReview();
-  if (state.isMeasuring) return <p className="rs-hint">Measuring both previews…</p>;
-  if (!state.diff) return <p className="rs-hint">Waiting for the previews to load.</p>;
+  if (state.measureError) return <p className="rs-why rs-why--missing" role="alert">{state.measureError}</p>;
+  if (!state.diff) return <p className="rs-hint">{state.isMeasuring ? 'Measuring both previews…' : 'Waiting for the previews to load.'}</p>;
   const elements = pluralize(state.diff.entries.length, 'element');
   const properties = pluralize(countChangedProperties(state.diff.entries), 'property', 'properties');
   return <p className="rs-summary">{elements} · {properties} changed</p>;

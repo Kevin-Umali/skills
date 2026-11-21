@@ -22,7 +22,7 @@ export const createPreviewFrames = ({ dispatch, getState, getReasons, onLayoutCh
     getMeasuredFrames,
     getReasons,
     onStart: () => dispatch({ type: 'measuring' }),
-    onResult: (diff) => dispatch({ type: 'diff-ready', diff }),
+    onResult: (diff, message) => dispatch(message ? { type: 'diff-failed', message } : { type: 'diff-ready', diff }),
     onLayoutChange,
     isEnabled: () => CHANGES_ACTIVE,
   });

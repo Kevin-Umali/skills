@@ -4,6 +4,7 @@ import {
   DIFF_AFTER_INTERACTION_MS,
   DIFF_AFTER_RESIZE_MS,
   DIFF_DEBOUNCE_MS,
+  DIFF_READY_MAX_POLLS,
   DIFF_SETTLE_MAX_POLLS,
   DIFF_SETTLE_PAUSE_MS,
   DIFF_SETTLE_POLL_MS,
@@ -26,7 +27,8 @@ const isFrameReady = (frame) => Boolean(frame?.contentDocument?.body) && frame.d
  * @param {() => boolean} [options.isEnabled] when false, nothing is measured
  * @param {() => void} options.onStart
  * @param {() => void} [options.onLayoutChange] a preview changed size, so outlines drawn from element positions must be redrawn
- * @param {(diff: object | null) => void} options.onResult
+ * @param {(diff: object | null, errorMessage?: string) => void} options.onResult
+ *   Called with the diff, or with null and a message when the previews could not be measured.
  */
 export const createDiffSession = ({ getMeasuredFrames, getReasons, onStart, onResult, onLayoutChange = () => {}, isEnabled = () => true }) => {
   let timerId;
@@ -39,14 +41,25 @@ export const createDiffSession = ({ getMeasuredFrames, getReasons, onStart, onRe
     const token = runToken;
     onStart();
     const frames = getMeasuredFrames();
-    if (!frames || !isFrameReady(frames.before) || !isFrameReady(frames.after)) return;
+    if (!frames) return;
+    const areReady = () => isFrameReady(frames.before) && isFrameReady(frames.after);
+    for (let poll = 0; poll < DIFF_READY_MAX_POLLS && !areReady(); poll += 1) await wait(DIFF_SETTLE_POLL_MS);
+    if (token !== runToken) return; // a newer measurement started
+    if (!areReady()) {
+      onResult(null, 'A preview did not load. Serve the folder over HTTP and check that both frame pages exist.');
+      return;
+    }
     const documents = [frames.before.contentDocument, frames.after.contentDocument];
     for (let poll = 0; poll < DIFF_SETTLE_MAX_POLLS && documents.some(hasPendingMotion); poll += 1) {
       await wait(DIFF_SETTLE_POLL_MS);
     }
     await wait(DIFF_SETTLE_PAUSE_MS);
-    if (token !== runToken) return; // a newer measurement started
-    onResult(attachReasons(computeDiff(documents[0], documents[1]), getReasons()));
+    if (token !== runToken) return;
+    try {
+      onResult(attachReasons(computeDiff(documents[0], documents[1]), getReasons()));
+    } catch (error) {
+      onResult(null, `Could not measure the previews: ${error.message}`);
+    }
   };
 
   const schedule = (delayMs = DIFF_DEBOUNCE_MS) => {

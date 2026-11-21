@@ -5,6 +5,8 @@ import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 const REQUIRED_STATE_FIELDS = ['id', 'area', 'label', 'description'];
+const RECOMMENDED_STATE_FIELDS = ['owner', 'boundary', 'limits', 'fixture']; // shown in the fixture details and read by the frame
+const ID_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/; // ids go in the URL, so keep them lowercase and hyphenated
 const EXIT_PROBLEMS = 2;
 
 const HELP = `Usage: node check-prototype.mjs [prototype-dir]   (default: current directory)
@@ -38,11 +40,16 @@ const warnings = [];
 const areaIds = areas.map((area) => area.id);
 const stateIds = states.map((state) => state.id);
 
+if (!states.length) errors.push('states.js: no states found. Export a non-empty `states` array.');
+if (!areas.length) errors.push('states.js: no areas found. Export a non-empty `areas` array.');
 stateIds.filter((id, index) => stateIds.indexOf(id) !== index).forEach((id) => errors.push(`states.js: duplicate state id "${id}".`));
 states.forEach((state) => {
   REQUIRED_STATE_FIELDS.filter((field) => !state[field]).forEach((field) => errors.push(`states.js: state "${state.id ?? '(no id)'}" is missing "${field}".`));
+  RECOMMENDED_STATE_FIELDS.filter((field) => state[field] === undefined).forEach((field) => warnings.push(`states.js: state "${state.id}" has no "${field}".`));
   if (state.area && !areaIds.includes(state.area)) errors.push(`states.js: state "${state.id}" uses unknown area "${state.area}". Areas: ${listIds(areaIds)}.`);
 });
+
+[...areaIds, ...stateIds].filter((id) => id && !ID_PATTERN.test(id)).forEach((id) => warnings.push(`states.js: id "${id}" should be lowercase and hyphenated, for example "card-declined".`));
 
 findUnknown(notes.lockedAreas ?? [], areaIds).forEach((id) => errors.push(`notes.js: lockedAreas has unknown area "${id}". Areas: ${listIds(areaIds)}.`));
 findUnknown(Object.keys(notes.areas ?? {}), areaIds).forEach((id) => errors.push(`notes.js: notes.areas has unknown area "${id}". Areas: ${listIds(areaIds)}.`));
