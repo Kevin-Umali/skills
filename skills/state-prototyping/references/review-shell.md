@@ -51,12 +51,12 @@ assets/review-shell/
   templates/  states.js and notes.js
 ```
 
-`node scripts/init-prototype.mjs <dir> --stack vanilla|react` copies `core/`, the stack and the templates. Then:
+`node scripts/init-prototype.mjs <dir> --stack vanilla|react [--no-comparison] [--no-highlights]` copies `core/`, the stack, the templates and placeholder frame pages, and sets the flags. Then:
 
 - Fill `states.js` and `notes.js`, and check them with `scripts/check-prototype.mjs`.
-- Create `before/frame.html` and `after/frame.html` (base path: `FRAME_BASE_URL` in `core/constants.js`). Each reads `state`, `theme` and `reset` from the query, applies the theme and renders the fixture. A fixture may call `parent.postMessage({ type: 'prototype:select-state', id }, location.origin)`.
+- Fill the placeholder `before/frame.html` and `after/frame.html` (base path: `FRAME_BASE_URL` in `core/constants.js`). Each reads `state`, `theme` and `reset` from the query, applies the theme and renders the fixture. A fixture may call `parent.postMessage({ type: 'prototype:select-state', id }, location.origin)`.
 - Serve over HTTP (`python3 -m http.server`), since modules and same-origin iframes need it. Open `vanilla/index.html`, or render `<ReviewShell areas states notes reasons />` from `react/` (needs `allowJs` and a bundler that handles CSS).
-- Flags in `core/constants.js`: `COMPARISON_ENABLED = false` for a single editable preview (the Compare group and Before frame disappear, the preview is `after/frame.html`, highlights go with it). `CHANGE_TRACKING_ENABLED = false` keeps the comparison but drops highlights, the inspector and the legend.
+- Flags (set by the init script, or edit `core/constants.js`): `COMPARISON_ENABLED = false` for a single editable preview (the Compare group and Before frame disappear, the preview is `after/frame.html`, highlights go with it). `CHANGE_TRACKING_ENABLED = false` keeps the comparison but drops highlights, the inspector and the legend.
 - Behavior lives in `core/` (reducer, URL state, diff, diff session, highlight geometry, export, stylesheet), so both starters behave the same. Change it there, never in one starter. Other stacks: reuse `core/` and write the view layer.
 
 Use trusted same-origin preview URLs and keep native, provider and persistence calls behind fixture boundaries. For existing UI the iframes import the real product views, so portability is no reason to recreate it. Never copy example data, production imports or paths into other prototypes.
