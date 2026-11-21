@@ -1,0 +1,14 @@
+{
+  "name": "kevin-umali-skills",
+  "version": "0.1.1",
+  "private": true,
+  "description": "Kevin Umali's agent skills",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Kevin-Umali/skills"
+  },
+  "license": "MIT",
+  "scripts": {
+    "check-frontmatter": "node scripts/check-frontmatter.mjs"
+  }
+}

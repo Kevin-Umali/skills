@@ -1,0 +1,4 @@
+interface:
+  display_name: "State Prototyping"
+  short_description: "Build reviewable UI state prototypes"
+  default_prompt: "Use $state-prototyping to build a reviewable prototype of this UI and its meaningful states."
