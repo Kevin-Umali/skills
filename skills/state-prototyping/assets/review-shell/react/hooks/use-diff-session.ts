@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { CHANGE_TRACKING_ENABLED } from '../../core/constants.js';
+import { CHANGES_ACTIVE } from '../../core/constants.js';
 import { createDiffSession } from '../../core/diff-session.js';
 import type { FrameRefs, Reason, ReviewAction, ReviewState } from '../types';
 import type { Dispatch, MutableRefObject } from 'react';
@@ -33,7 +33,7 @@ export const useDiffSession = ({ frames, state, dispatch, reasons }: UseDiffSess
       onStart: () => dispatch({ type: 'measuring' }),
       onResult: (diff: unknown) => dispatch({ type: 'diff-ready', diff }),
       onLayoutChange: () => setLayoutTick((tick) => tick + 1),
-      isEnabled: () => CHANGE_TRACKING_ENABLED,
+      isEnabled: () => CHANGES_ACTIVE,
     });
     sessionRef.current = session;
     const detachers = (['before', 'after', 'probe'] as const).flatMap((name) => {

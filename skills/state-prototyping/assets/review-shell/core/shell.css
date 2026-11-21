@@ -28,7 +28,8 @@ body { margin: 0; }
 .rs :focus-visible { outline: 2px solid var(--rs-mute); outline-offset: 2px; }
 .rs[data-sidebar='closed'] { grid-template-columns: minmax(0, 1fr); }
 .rs[data-sidebar='closed'] .rs-side { display: none; }
-.rs[data-changes='off'] [data-feature='changes'] { display: none !important; }
+.rs [hidden] { display: none !important; }
+.rs[data-changes='off'] [data-feature='changes'], .rs[data-comparison='off'] [data-feature='compare'] { display: none !important; }
 .rs-sr { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .rs h1, .rs h2, .rs h3, .rs p { margin: 0; font-weight: 500; }
 .rs ul, .rs ol { margin: 0; padding: 0; list-style: none; }

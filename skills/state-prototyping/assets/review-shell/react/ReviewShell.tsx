@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef } from 'react';
 import '../core/shell.css';
-import { CHANGE_TRACKING_ENABLED } from '../core/constants.js';
+import { CHANGES_ACTIVE, COMPARISON_ENABLED } from '../core/constants.js';
 import { pluralize, buildChangeSummary } from '../core/export-changes.js';
 import { findState } from '../core/registry.js';
 import { Inspector } from './components/Inspector';
@@ -55,7 +55,7 @@ export const ReviewShell = ({ areas, states, notes, reasons }: ReviewShellProps)
 
   return (
     <ReviewContext.Provider value={contextValue}>
-      <div className="rs" id="rs-root" data-inspector={state.isInspectorOpen ? 'open' : 'closed'} data-sidebar={state.isSidebarOpen ? 'open' : 'closed'} data-changes={CHANGE_TRACKING_ENABLED ? 'on' : 'off'}>
+      <div className="rs" id="rs-root" data-inspector={state.isInspectorOpen ? 'open' : 'closed'} data-sidebar={state.isSidebarOpen ? 'open' : 'closed'} data-changes={CHANGES_ACTIVE ? 'on' : 'off'} data-comparison={COMPARISON_ENABLED ? 'on' : 'off'}>
         <Sidebar />
         <main className="rs-main">
           <TopBar />

@@ -1,5 +1,5 @@
 // The Before and After previews, plus an off-screen probe so the diff also works when only one side is shown.
-import { CHANGE_TRACKING_ENABLED, FRAME_BASE_URL, FRAME_SIDES } from '../core/constants.js';
+import { CHANGES_ACTIVE, COMPARISON_ENABLED, FRAME_BASE_URL, FRAME_SIDES } from '../core/constants.js';
 import { createDiffSession } from '../core/diff-session.js';
 import { buildFrameUrl } from '../core/view-state.js';
 import { byId } from './dom.js';
@@ -24,7 +24,7 @@ export const createPreviewFrames = ({ dispatch, getState, getReasons, onLayoutCh
     onStart: () => dispatch({ type: 'measuring' }),
     onResult: (diff) => dispatch({ type: 'diff-ready', diff }),
     onLayoutChange,
-    isEnabled: () => CHANGE_TRACKING_ENABLED,
+    isEnabled: () => CHANGES_ACTIVE,
   });
 
   [frames.before.iframe, frames.after.iframe, probeFrame].forEach((frame) => {
@@ -39,12 +39,14 @@ export const createPreviewFrames = ({ dispatch, getState, getReasons, onLayoutCh
   // The probe renders the hidden side at the visible frame's size, so both measurements use the same viewport.
   const renderProbe = (state) => {
     const hiddenSide = HIDDEN_SIDE_BY_COMPARE[state.compare];
-    if (!hiddenSide) return;
+    if (!hiddenSide || !CHANGES_ACTIVE) return;
     const visibleFrame = frames[hiddenSide === 'before' ? 'after' : 'before'].iframe;
     probeFrame.style.inlineSize = `${visibleFrame.offsetWidth}px`;
     probeFrame.style.blockSize = `${visibleFrame.offsetHeight}px`;
     setFrameSource(probeFrame, buildFrameUrl(FRAME_BASE_URL, hiddenSide, state, state.resetCount));
   };
+
+  if (!COMPARISON_ENABLED) byId('rs-after-heading').textContent = 'Preview';
 
   const render = (state) => {
     framesElement.dataset.compare = state.compare;

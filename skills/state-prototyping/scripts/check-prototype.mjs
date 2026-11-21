@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Checks a prototype's states.js and notes.js for the mistakes that fail silently: unknown ids, empty reasons, missing frames.
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
@@ -53,7 +53,9 @@ reasons.forEach((reason, index) => {
   if (reason.props && !Array.isArray(reason.props)) errors.push(`notes.js: reasons[${index}].props must be an array of property names.`);
 });
 
-['before', 'after'].filter((side) => !existsSync(join(directory, side, 'frame.html'))).forEach((side) => warnings.push(`${side}/frame.html not found.`));
+const constantsPath = join(directory, 'core', 'constants.js');
+const isSinglePreview = existsSync(constantsPath) && /COMPARISON_ENABLED\s*=\s*false/.test(readFileSync(constantsPath, 'utf8'));
+(isSinglePreview ? ['after'] : ['before', 'after']).filter((side) => !existsSync(join(directory, side, 'frame.html'))).forEach((side) => warnings.push(`${side}/frame.html not found.`));
 
 console.log(JSON.stringify({ ok: !errors.length, counts: { areas: areas.length, states: states.length, reasons: reasons.length }, errors, warnings }, null, 2));
 if (errors.length) process.exit(EXIT_PROBLEMS);

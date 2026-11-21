@@ -20,8 +20,12 @@ export const COMPARE_OPTIONS = [
   ['side', 'Side by side'],
 ];
 
+// Before and After side by side. Set to false for a single editable preview: it lives in after/frame.html.
+export const COMPARISON_ENABLED = true;
 // Highlights, the measured diff and the Changes inspector. Set to false when the user does not want highlights.
 export const CHANGE_TRACKING_ENABLED = true;
+// Change tracking needs two previews to compare.
+export const CHANGES_ACTIVE = COMPARISON_ENABLED && CHANGE_TRACKING_ENABLED;
 
 /** @type {Array<'before' | 'after'>} */
 export const FRAME_SIDES = ['before', 'after'];

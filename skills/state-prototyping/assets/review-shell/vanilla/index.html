@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="../core/shell.css">
 </head>
 <body>
-  <div class="rs" id="rs-root" data-inspector="closed" data-sidebar="open" data-changes="on">
+  <div class="rs" id="rs-root" data-inspector="closed" data-sidebar="open" data-changes="on" data-comparison="on">
     <aside class="rs-side" id="rs-side" aria-label="States">
       <div class="rs-brand"><h1>Prototype review</h1><span>Revision 1</span></div>
       <div class="rs-search">
@@ -15,7 +15,7 @@
         <input id="rs-query" type="search" placeholder="Search states" autocomplete="off" spellcheck="false">
       </div>
       <nav class="rs-list" id="rs-list" aria-label="State list"></nav>
-      <p class="rs-legend">
+      <p class="rs-legend" data-feature="changes">
         <span class="rs-mark rs-mark--own" aria-hidden="true"></span>Changed here
         <span class="rs-mark rs-mark--area" aria-hidden="true"></span>Area-wide only
       </p>
@@ -28,7 +28,7 @@
     <main class="rs-main">
       <header class="rs-top" id="rs-top">
         <button type="button" class="rs-btn" id="rs-toggle-sidebar" aria-controls="rs-side" aria-pressed="true">Sidebar</button>
-        <div class="rs-group" role="group" aria-labelledby="rs-compare-label"><span class="rs-group-label" id="rs-compare-label">Compare</span><div class="rs-seg" id="rs-compare"></div></div>
+        <div class="rs-group" data-feature="compare" role="group" aria-labelledby="rs-compare-label"><span class="rs-group-label" id="rs-compare-label">Compare</span><div class="rs-seg" id="rs-compare"></div></div>
         <div class="rs-group" role="group" aria-labelledby="rs-width-label"><span class="rs-group-label" id="rs-width-label">Width</span><div class="rs-seg" id="rs-width"></div></div>
         <div class="rs-group" role="group" aria-labelledby="rs-theme-label"><span class="rs-group-label" id="rs-theme-label">Theme</span><div class="rs-seg" id="rs-theme"></div></div>
         <div class="rs-group" data-feature="changes" role="group" aria-labelledby="rs-highlight-label"><span class="rs-group-label" id="rs-highlight-label">Highlight</span><div class="rs-seg"><button type="button" class="rs-btn" id="rs-highlight" aria-pressed="true">Changes</button></div></div>
@@ -46,7 +46,7 @@
             <div class="rs-frame-body"><iframe id="rs-frame-before" title="Before preview"></iframe><div class="rs-hl" id="rs-hl-before"></div></div>
           </div>
           <div class="rs-frame-wrap" id="rs-wrap-after">
-            <div class="rs-frame-head"><span>After <span class="rs-hint">editable</span></span><span>Fixture data, no network</span></div>
+            <div class="rs-frame-head"><span id="rs-after-heading">After <span class="rs-hint">editable</span></span><span>Fixture data, no network</span></div>
             <div class="rs-frame-body"><iframe id="rs-frame-after" title="After preview"></iframe><div class="rs-hl" id="rs-hl-after"></div></div>
           </div>
         </div>

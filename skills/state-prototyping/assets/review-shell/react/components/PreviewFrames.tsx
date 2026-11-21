@@ -1,6 +1,6 @@
 import { useLayoutEffect } from 'react';
 import type { CSSProperties, MutableRefObject } from 'react';
-import { FRAME_BASE_URL, FRAME_SIDES } from '../../core/constants.js';
+import { CHANGES_ACTIVE, COMPARISON_ENABLED, FRAME_BASE_URL, FRAME_SIDES } from '../../core/constants.js';
 import { buildFrameUrl } from '../../core/view-state.js';
 import { useReview } from '../review-context';
 import type { FrameRefs, FrameSide } from '../types';
@@ -8,14 +8,14 @@ import { HighlightLayer } from './HighlightLayer';
 
 const FRAME_TITLES: Record<FrameSide, { name: string; kind: string }> = {
   before: { name: 'Before', kind: 'frozen' },
-  after: { name: 'After', kind: 'editable' },
+  after: COMPARISON_ENABLED ? { name: 'After', kind: 'editable' } : { name: 'Preview', kind: '' },
 };
 const HIDDEN_SIDE_BY_COMPARE = { after: 'before', before: 'after' } as const;
 
 export const PreviewFrames = ({ frames }: { frames: MutableRefObject<FrameRefs> }) => {
   const { state } = useReview();
   const isFit = state.width === 'fit';
-  const hiddenSide = state.compare === 'side' ? null : HIDDEN_SIDE_BY_COMPARE[state.compare];
+  const hiddenSide = state.compare === 'side' || !CHANGES_ACTIVE ? null : HIDDEN_SIDE_BY_COMPARE[state.compare];
   const framesStyle = { '--rs-frame-width': isFit ? '' : `${Number(state.width) + 2}px` } as CSSProperties;
 
   // The probe renders the hidden side at the visible frame's size, so both measurements use the same viewport.

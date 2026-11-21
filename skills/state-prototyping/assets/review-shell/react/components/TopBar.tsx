@@ -37,7 +37,7 @@ export const TopBar = () => {
     <header className="rs-top" ref={topBarRef}>
       <button type="button" className="rs-btn" aria-controls="rs-side" aria-pressed={state.isSidebarOpen} onClick={() => dispatch({ type: 'toggle-sidebar' })}>Sidebar</button>
       {SEGMENTED_GROUPS.map(({ key, label, options }) => (
-        <div className="rs-group" role="group" aria-label={label} key={key}>
+        <div className="rs-group" data-feature={key === 'compare' ? 'compare' : undefined} role="group" aria-label={label} key={key}>
           <span className="rs-group-label">{label}</span>
           <div className="rs-seg">
             {options.map(([value, optionLabel]) => (

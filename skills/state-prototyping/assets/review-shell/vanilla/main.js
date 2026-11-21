@@ -1,5 +1,5 @@
 // Entry point: builds the store, creates each part of the shell, and redraws them on every change.
-import { CHANGE_TRACKING_ENABLED, FRAME_SIDES, NARROW_WINDOW_QUERY } from '../core/constants.js';
+import { CHANGES_ACTIVE, COMPARISON_ENABLED, FRAME_SIDES, NARROW_WINDOW_QUERY } from '../core/constants.js';
 import { createInitialState, reviewReducer } from '../core/review-reducer.js';
 import { buildSearchFromView, readViewFromSearch } from '../core/view-state.js';
 import { areas, states } from '../states.js';
@@ -55,7 +55,9 @@ window.addEventListener('message', (event) => {
   if (target) dispatch({ type: 'select-state', stateId: target.id, areaId: target.area });
 });
 
-document.getElementById('rs-root').dataset.changes = CHANGE_TRACKING_ENABLED ? 'on' : 'off';
+const root = document.getElementById('rs-root');
+root.dataset.changes = CHANGES_ACTIVE ? 'on' : 'off';
+root.dataset.comparison = COMPARISON_ENABLED ? 'on' : 'off';
 parts.forEach((part) => part.render(getState()));
 topBar.syncHeight();
 previewFrames.scheduleDiff();

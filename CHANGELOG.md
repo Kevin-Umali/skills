@@ -8,6 +8,7 @@
 - Highlights (optional): outlines and badges over changed elements, a measured `property  old → new` list with agent-written reasons, and JSON and Markdown output. Selecting a change outlines only it. Works in every comparison mode.
 - Vanilla and React starters share a framework-free `core/` and behave the same.
 - Scripts: `init-prototype`, `check-prototype`, `detect-context`.
+- Single-preview mode (`COMPARISON_ENABLED = false`) for when there is nothing to compare, found by running the skill on a small task. The checker no longer asks for `before/frame.html` then.
 - Skill text cut roughly in half. User, developer and agent experience are a lens, not UI.
 - Made stack-agnostic, removed machine-specific paths, replaced the career example with a billing one.
 

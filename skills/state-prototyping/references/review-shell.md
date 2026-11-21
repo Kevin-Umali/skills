@@ -37,7 +37,7 @@ Idea credit: [ui-diff](https://github.com/imuratalpay/ui-diff) diffs screenshots
 
 - **Registry:** stable `id`, `area`, `label`, `description`, `owner`, `boundary`, `limits`. List and navigation derive from it. Substate buttons only for meaningful branches. Derive it from the real app.
 - **Selecting** updates navigator and previews at once. Previous and Next expand the area and scroll its row into view without moving focus. Reset discards local edits. Nothing animates on state change or reset.
-- **URL:** state, theme, width, compare, highlight, sidebar. Never private input, credentials or edits. Disclose substates it does not keep. If the clipboard is refused, show the link in the popover, selected.
+- **URL:** state, theme, width, compare, highlight, sidebar. Never private input, credentials or edits. Disclose substates it does not keep in that state's `limits`. If the clipboard is refused, show the link in the popover, selected.
 - **Frame messages** (`prototype:select-state`): validate origin, sender, type and registry id.
 - **Comparison:** one preview by default. Chosen: Before only, After only, Side by side, with synchronized state, theme and width and independent local edits. Before imports unchanged views. A recreated layout is not a baseline.
 
@@ -56,7 +56,7 @@ assets/review-shell/
 - Fill `states.js` and `notes.js`, and check them with `scripts/check-prototype.mjs`.
 - Create `before/frame.html` and `after/frame.html` (base path: `FRAME_BASE_URL` in `core/constants.js`). Each reads `state`, `theme` and `reset` from the query, applies the theme and renders the fixture. A fixture may call `parent.postMessage({ type: 'prototype:select-state', id }, location.origin)`.
 - Serve over HTTP (`python3 -m http.server`), since modules and same-origin iframes need it. Open `vanilla/index.html`, or render `<ReviewShell areas states notes reasons />` from `react/` (needs `allowJs` and a bundler that handles CSS).
-- No highlights wanted: set `CHANGE_TRACKING_ENABLED = false` in `core/constants.js`.
+- Flags in `core/constants.js`: `COMPARISON_ENABLED = false` for a single editable preview (the Compare group and Before frame disappear, the preview is `after/frame.html`, highlights go with it). `CHANGE_TRACKING_ENABLED = false` keeps the comparison but drops highlights, the inspector and the legend.
 - Behavior lives in `core/` (reducer, URL state, diff, diff session, highlight geometry, export, stylesheet), so both starters behave the same. Change it there, never in one starter. Other stacks: reuse `core/` and write the view layer.
 
 Use trusted same-origin preview URLs and keep native, provider and persistence calls behind fixture boundaries. For existing UI the iframes import the real product views, so portability is no reason to recreate it. Never copy example data, production imports or paths into other prototypes.

@@ -1,5 +1,5 @@
 // The review URL: which state, theme, width, comparison mode and highlight setting are shown.
-import { COMPARE_OPTIONS, DEFAULT_VIEW, THEME_OPTIONS, WIDTH_OPTIONS } from './constants.js';
+import { COMPARE_OPTIONS, COMPARISON_ENABLED, DEFAULT_VIEW, THEME_OPTIONS, WIDTH_OPTIONS } from './constants.js';
 
 const pickOption = (value, options, fallback) => (options.some(([key]) => key === value) ? value : fallback);
 
@@ -10,7 +10,7 @@ export const readViewFromSearch = (search, states, defaultSidebarOpen = DEFAULT_
     stateId: states.some((state) => state.id === requestedStateId) ? requestedStateId : states[0].id,
     theme: pickOption(params.get('theme'), THEME_OPTIONS, DEFAULT_VIEW.theme),
     width: pickOption(params.get('width'), WIDTH_OPTIONS, DEFAULT_VIEW.width),
-    compare: pickOption(params.get('compare'), COMPARE_OPTIONS, DEFAULT_VIEW.compare),
+    compare: COMPARISON_ENABLED ? pickOption(params.get('compare'), COMPARE_OPTIONS, DEFAULT_VIEW.compare) : 'after',
     highlight: params.get('highlight') !== '0',
     isSidebarOpen: params.has('sidebar') ? params.get('sidebar') !== '0' : defaultSidebarOpen,
   };
