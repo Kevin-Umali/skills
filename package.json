@@ -9,6 +9,7 @@
   },
   "license": "MIT",
   "scripts": {
-    "check-frontmatter": "node scripts/check-frontmatter.mjs"
+    "check-frontmatter": "node scripts/check-frontmatter.mjs",
+    "release-notes": "node scripts/release-notes.mjs"
   }
 }
