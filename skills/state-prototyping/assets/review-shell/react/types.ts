@@ -1,8 +1,9 @@
 // Types for the review shell. The data shapes match the notes and registry modules the vanilla starter reads.
-import type { Dispatch } from 'react';
-
 export type FrameSide = 'before' | 'after';
-export type CompareMode = 'before' | 'after' | 'side';
+export type CompareMode = 'before' | 'after' | 'split' | 'slider';
+// The parts core/render-scopes.js names.
+export type RenderPart = 'toolbar' | 'sidebar' | 'stage' | 'highlights' | 'inspector' | 'data' | 'announcer';
+export type PopoverName = 'details' | 'share' | 'legend' | 'copy-link';
 
 export interface Area {
   id: string;
@@ -57,39 +58,34 @@ export interface Diff {
   removed: { label: string; beforeElement: Element }[];
 }
 
+// What core/review-reducer.js and core/view-state.js produce.
 export interface ReviewState {
   stateId: string;
   theme: 'light' | 'dark';
   width: string;
   compare: CompareMode;
+  compareChosen: boolean;
+  split: number;
   highlight: boolean;
   isSidebarOpen: boolean;
+  sidebarChosen: boolean;
+  isInspectorOpen: boolean;
+  selectedChange: number | null;
   query: string;
-  collapsedAreaIds: string[];
   resetCount: number;
   diff: Diff | null;
   isMeasuring: boolean;
   measureError: string | null;
-  selectedChange: number | null;
   hoveredChange: number | null;
+  linkedChanges: number[];
   categoryFilter: string;
   isInspecting: boolean;
-  isInspectorOpen: boolean;
-  popover: 'details' | 'copy-link' | null;
+  popover: PopoverName | null;
 }
 
 export interface ReviewAction {
   type: string;
   [key: string]: unknown;
-}
-
-export interface ReviewContextValue {
-  areas: Area[];
-  states: PrototypeState[];
-  notes: Notes;
-  reasons: Reason[];
-  state: ReviewState;
-  dispatch: Dispatch<ReviewAction>;
 }
 
 export interface FrameRefs {

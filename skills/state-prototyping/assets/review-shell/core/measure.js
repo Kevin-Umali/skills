@@ -15,7 +15,10 @@ const formatColor = (value) => {
 
 const roundToTenth = (value) => Math.round(value * 10) / 10;
 
-export const measureElement = (element) => {
+// One cache per diff run. A run only reads, so an element's measurement cannot go stale while it is in use.
+export const createMeasureCache = () => new WeakMap();
+
+const readElement = (element) => {
   const computedStyle = element.ownerDocument.defaultView.getComputedStyle(element);
   const box = element.getBoundingClientRect();
   const values = {
@@ -28,7 +31,13 @@ export const measureElement = (element) => {
   const hasOwnText = !element.children.length && element.textContent.trim();
   if (hasOwnText) values[TEXT_PROPERTY] = element.textContent.trim();
   const isRendered = (box.width > 0 || box.height > 0) && computedStyle.visibility !== 'hidden';
-  return { values, isRendered };
+  return { values, isRendered, box: { width: box.width, height: box.height } };
+};
+
+export const measureElement = (element, cache) => {
+  if (!cache) return readElement(element);
+  if (!cache.has(element)) cache.set(element, readElement(element));
+  return cache.get(element);
 };
 
 export const describeElement = (element) => {

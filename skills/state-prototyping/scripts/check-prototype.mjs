@@ -61,7 +61,14 @@ reasons.forEach((reason, index) => {
 });
 
 const constantsPath = join(directory, 'core', 'constants.js');
-const isSinglePreview = existsSync(constantsPath) && /COMPARISON_ENABLED\s*=\s*false/.test(readFileSync(constantsPath, 'utf8'));
+const constantsSource = existsSync(constantsPath) ? readFileSync(constantsPath, 'utf8') : '';
+const isSinglePreview = /COMPARISON_ENABLED\s*=\s*false/.test(constantsSource);
+const isTrackingOff = /CHANGE_TRACKING_ENABLED\s*=\s*false/.test(constantsSource);
+
+// Only nag once the author has started writing notes; a fresh prototype has none.
+const hasNotes = [notes.lockedAreas, notes.shared].some((list) => list?.length) || [notes.areas, notes.states].some((map) => Object.keys(map ?? {}).length) || reasons.length > 0;
+const statesWithoutNotes = stateIds.filter((id) => !(notes.states ?? {})[id]?.length);
+if (!isSinglePreview && !isTrackingOff && hasNotes && statesWithoutNotes.length) warnings.push(`notes.js: no notes.states entry for ${statesWithoutNotes.length} state(s): ${listIds(statesWithoutNotes)}.`);
 (isSinglePreview ? ['after'] : ['before', 'after']).filter((side) => !existsSync(join(directory, side, 'frame.html'))).forEach((side) => warnings.push(`${side}/frame.html not found.`));
 
 console.log(JSON.stringify({ ok: !errors.length, counts: { areas: areas.length, states: states.length, reasons: reasons.length }, errors, warnings }, null, 2));

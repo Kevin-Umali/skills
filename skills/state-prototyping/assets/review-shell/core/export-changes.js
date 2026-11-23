@@ -20,6 +20,8 @@ export const buildChangeSummary = (state, diff) => ({
   onlyInBefore: diff.removed.map((item) => item.label),
 });
 
+export const formatChangesAsJson = (summary) => JSON.stringify(summary, null, 2);
+
 export const formatChangesAsMarkdown = (summary) => {
   const heading = `## ${summary.stateLabel}: ${pluralize(summary.elementCount, 'element')}, ${pluralize(summary.propertyCount, 'property', 'properties')} changed`;
   const sections = summary.changes.map((change) => {
@@ -34,3 +36,16 @@ export const formatChangesAsMarkdown = (summary) => {
   ].filter(Boolean);
   return [heading, ...sections, ...extra].join('\n\n');
 };
+
+// What `#rs-review-data` holds: the current view and the selected change, then the measured changes (or `measured: false`).
+export const buildReviewData = (state, current, summary) => ({
+  view: {
+    state: state.stateId,
+    compare: state.compare,
+    width: state.width,
+    theme: state.theme,
+    split: state.split,
+  },
+  selectedChange: state.selectedChange === null || !summary ? null : summary.changes[state.selectedChange] ?? null,
+  ...(summary ?? { stateId: current.id, measured: false }),
+});

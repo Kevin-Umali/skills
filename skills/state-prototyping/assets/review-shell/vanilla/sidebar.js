@@ -1,54 +1,53 @@
-// Left sidebar: searchable state list grouped by area, markers, legend and Reset state.
+// Left sidebar: a searchable listbox of states grouped by area, a count, Reset state and the marker legend.
+// The list is one tab stop. Arrow keys, Home and End move focus; Enter or Space picks the focused state.
+import { CHANGES_ACTIVE, SIDEBAR_OVERLAY_QUERY } from '../core/constants.js';
 import { getChangeKind, getChangeLines, isAreaLocked, matchesQuery } from '../core/registry.js';
-import { byId, createButton, createElement, renderKeepingFocus } from './dom.js';
-
-const CHEVRON_SVG = '<svg viewBox="0 0 10 10" fill="none" aria-hidden="true"><path d="M2 3.5l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-const LOCK_SVG = '<svg viewBox="0 0 12 12" width="10" height="10" fill="none" aria-hidden="true"><rect x="2" y="5.25" width="8" height="5" rx="1.25" stroke="currentColor" stroke-width="1.25"/><path d="M4 5V3.75a2 2 0 014 0V5" stroke="currentColor" stroke-width="1.25"/></svg>';
+import { buildIconSvg } from '../core/icons.js';
+import { byId, createButton, createChangeDetector, createElement } from './dom.js';
 
 export const createSidebar = ({ areas, states, notes, dispatch }) => {
   const listElement = byId('rs-list');
   const countElement = byId('rs-count');
   const searchInput = byId('rs-query');
-  let previousKey = '';
+  const hasQueryChanged = createChangeDetector();
+  const hasSelectionChanged = createChangeDetector();
+  let options = [];
 
-  const createStateButton = (state, currentStateId) => {
-    const button = createButton(state.label, {
+  const selectState = (state) => dispatch({
+    type: 'select-state',
+    stateId: state.id,
+    areaId: state.area,
+    closesSidebar: matchMedia(SIDEBAR_OVERLAY_QUERY).matches,
+  });
+
+  const createOption = (state) => {
+    const option = createElement('div', {
+      attributes: { role: 'option', tabindex: '-1', 'aria-selected': 'false' },
       className: 'rs-state',
-      dataset: { id: state.id, focusKey: `state:${state.id}` },
-    });
-    const changeKind = getChangeKind(state, notes);
+      dataset: { stateId: state.id },
+    }, [createElement('span', { text: state.label })]);
+    const changeKind = CHANGES_ACTIVE ? getChangeKind(state, notes) : 'none';
     if (changeKind === 'own' || changeKind === 'area') {
-      button.append(createElement('span', { className: `rs-mark rs-mark--${changeKind}` }));
-      button.append(createElement('span', {
-        className: 'rs-sr',
-        text: changeKind === 'own' ? ', changed in After' : ', area-wide change in After',
-      }));
-      button.title = getChangeLines(state, notes).map((line) => `• ${line}`).join('\n');
+      option.append(
+        createElement('span', { className: `rs-mark rs-mark--${changeKind}`, attributes: { 'aria-hidden': 'true' } }),
+        createElement('span', { className: 'rs-sr', text: changeKind === 'own' ? ', changed in After' : ', area-wide change in After' }),
+      );
+      option.title = getChangeLines(state, notes).map((line) => `• ${line}`).join('\n');
     }
-    if (state.id === currentStateId) button.setAttribute('aria-current', 'true');
-    button.addEventListener('click', () => dispatch({ type: 'select-state', stateId: state.id, areaId: state.area }));
-    return button;
+    option.addEventListener('click', () => selectState(state));
+    return option;
   };
 
-  const createAreaGroup = (area, visibleStates, state, isSearching) => {
-    const isOpen = isSearching || !state.collapsedAreaIds.includes(area.id); // matches inside collapsed groups stay visible while searching
-    const header = createButton('', {
-      className: 'rs-area-btn',
-      dataset: { focusKey: `area:${area.id}` },
-      attributes: { 'aria-expanded': String(isOpen), 'aria-controls': `rs-group-${area.id}` },
-    });
-    header.innerHTML = CHEVRON_SVG;
-    header.append(createElement('span', { text: area.label }));
-    if (isAreaLocked(notes, area.id)) {
-      const lockChip = createElement('span', { className: 'rs-lock', text: 'Locked' });
-      lockChip.insertAdjacentHTML('afterbegin', LOCK_SVG);
-      header.append(lockChip);
-    }
-    header.append(createElement('span', { className: 'rs-count', text: String(visibleStates.length) }));
-    header.addEventListener('click', () => dispatch({ type: 'toggle-area', areaId: area.id }));
-    const body = createElement('div', { attributes: { id: `rs-group-${area.id}` } }, visibleStates.map((item) => createStateButton(item, state.stateId)));
-    body.hidden = !isOpen;
-    return createElement('div', {}, [header, body]);
+  const createLockChip = () => {
+    const chip = createElement('span', { className: 'rs-lock', text: 'Locked' });
+    chip.insertAdjacentHTML('afterbegin', buildIconSvg('lock'));
+    return chip;
+  };
+
+  const createAreaGroup = (area, visibleStates) => {
+    const heading = createElement('div', { className: 'rs-area', attributes: { 'aria-hidden': 'true' }, text: area.label });
+    if (isAreaLocked(notes, area.id)) heading.append(' ', createLockChip());
+    return createElement('div', { attributes: { role: 'group', 'aria-label': area.label } }, [heading, ...visibleStates.map(createOption)]);
   };
 
   const createEmptyResult = (query) => {
@@ -57,29 +56,59 @@ export const createSidebar = ({ areas, states, notes, dispatch }) => {
     return createElement('p', { className: 'rs-empty', text: `No states match “${query.trim()}”. ` }, [clearButton]);
   };
 
-  const renderList = (state) => {
-    const isSearching = Boolean(state.query.trim());
+  const renderList = (query) => {
     const groups = areas
-      .map((area) => ({ area, visibleStates: states.filter((item) => item.area === area.id && matchesQuery(item, areas, state.query)) }))
+      .map((area) => ({ area, visibleStates: states.filter((item) => item.area === area.id && matchesQuery(item, areas, query)) }))
       .filter(({ visibleStates }) => visibleStates.length);
     const shownCount = groups.reduce((total, group) => total + group.visibleStates.length, 0);
-    listElement.replaceChildren(...(groups.length
-      ? groups.map(({ area, visibleStates }) => createAreaGroup(area, visibleStates, state, isSearching))
-      : [createEmptyResult(state.query)]));
-    countElement.textContent = isSearching ? `${shownCount} of ${states.length} states` : `${states.length} states`;
+    listElement.replaceChildren(...(groups.length ? groups.map(({ area, visibleStates }) => createAreaGroup(area, visibleStates)) : [createEmptyResult(query)]));
+    options = [...listElement.querySelectorAll('[role="option"]')];
+    countElement.textContent = query.trim() ? `${shownCount} of ${states.length} states` : `${states.length} states`;
   };
 
-  const render = (state) => {
-    const key = [state.query, state.collapsedAreaIds.join(','), state.stateId].join('|');
-    if (key === previousKey) return;
-    previousKey = key;
-    renderKeepingFocus(listElement, () => renderList(state));
-    // Keep the selected row in view without moving keyboard focus.
-    listElement.querySelector('[aria-current="true"]')?.scrollIntoView({ block: 'nearest' });
+  // Marks the current state and makes it (or the first row) the list's single tab stop.
+  const syncSelection = (stateId) => {
+    options.forEach((option) => option.setAttribute('aria-selected', String(option.dataset.stateId === stateId)));
+    const tabStop = options.find((option) => option.dataset.stateId === stateId) ?? options[0];
+    options.forEach((option) => { option.tabIndex = option === tabStop ? 0 : -1; });
+    listElement.querySelector('[aria-selected="true"]')?.scrollIntoView({ block: 'nearest' });
   };
+
+  const moveFocus = (option) => {
+    options.forEach((candidate) => { candidate.tabIndex = candidate === option ? 0 : -1; });
+    option.focus();
+  };
+
+  listElement.addEventListener('keydown', (event) => {
+    const index = options.indexOf(document.activeElement);
+    if (index === -1) return;
+    const targetIndex = { ArrowDown: index + 1, ArrowUp: index - 1, Home: 0, End: options.length - 1 }[event.key];
+    if (targetIndex !== undefined) {
+      event.preventDefault();
+      moveFocus(options[Math.min(Math.max(targetIndex, 0), options.length - 1)]);
+    } else if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      options[index].click();
+    }
+  });
 
   searchInput.addEventListener('input', (event) => dispatch({ type: 'set-query', query: event.target.value }));
+  searchInput.addEventListener('keydown', (event) => {
+    if (event.key === 'ArrowDown' && options.length) {
+      event.preventDefault();
+      moveFocus(options.find((option) => option.tabIndex === 0) ?? options[0]);
+    }
+  });
   byId('rs-reset').addEventListener('click', () => dispatch({ type: 'reset-preview' }));
+  byId('rs-scrim').addEventListener('click', () => dispatch({ type: 'set-sidebar', isOpen: false, isUserChoice: false }));
 
-  return { render };
+  const render = (state) => {
+    if (hasQueryChanged(state.query)) {
+      renderList(state.query);
+      hasSelectionChanged(null); // the rows are new, so the selection must be applied again
+    }
+    if (hasSelectionChanged(state.stateId)) syncSelection(state.stateId);
+  };
+
+  return { render, focusSearch: () => searchInput.focus() };
 };

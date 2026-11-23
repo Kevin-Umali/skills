@@ -37,7 +37,7 @@ One state per user-visible branch, not per boolean combination.
 
 ## 4. Review
 
-Run `init-prototype`, fill `states.js` and `notes.js`, run `check-prototype`. Choose Side by side with highlights. After the Card area is changed and approved, add it to `lockedAreas`.
+Run `init-prototype --states`, fill the fixtures and `notes.js`, run `check-prototype`. Choose Split with highlights. After the Card area is changed and approved, add it to `lockedAreas`.
 
 An entry in the Changes inspector, with the agent's reason from `notes.js`:
 
@@ -52,10 +52,6 @@ An entry in the Changes inspector, with the agent's reason from `notes.js`:
 { selector: '#save', props: ['background-color'], why: 'One black primary action says "do this next".' }
 ```
 
-## 5. Perspectives
-
-For `card-declined`: the user sees what to do and keeps what they typed. The developer maps the provider SDK's error codes before shipping. The agent finds the decline announced as an alert and a Retry button that names the next action. Failures become fixes or report lines.
-
-## 6. Report
+## 5. Report
 
 Checked: every state at Desktop and Phone widths, both themes, dialog keyboard focus. Not verified: the payment SDK, native file save, real network. Production source unchanged.

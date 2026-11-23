@@ -1,7 +1,6 @@
-// Inspector tab: every element that renders differently, filterable, one expanded at a time.
-import { CATEGORY_LABELS, COPY_NOTICE_MS } from '../core/constants.js';
-import { countChangedProperties, countEntriesByCategory } from '../core/diff.js';
-import { buildChangeSummary, formatChangesAsMarkdown, pluralize } from '../core/export-changes.js';
+// Inspector body: every element that renders differently, filterable by the header chips, one expanded at a time.
+import { countChangedProperties } from '../core/diff.js';
+import { pluralize } from '../core/export-changes.js';
 import { getChangeLines } from '../core/registry.js';
 import { getVisibleChangeIndexes } from '../core/review-reducer.js';
 import { createButton, createElement, createList } from './dom.js';
@@ -12,46 +11,6 @@ const createSummary = (state) => {
   const elements = pluralize(state.diff.entries.length, 'element');
   const properties = pluralize(countChangedProperties(state.diff.entries), 'property', 'properties');
   return createElement('p', { className: 'rs-summary', text: `${elements} · ${properties} changed` });
-};
-
-const createCopyButton = (current, diff) => {
-  const notice = createElement('span', { className: 'rs-note' });
-  const button = createButton('Copy as Markdown');
-  button.disabled = !diff?.entries.length;
-  button.addEventListener('click', async () => {
-    try {
-      await navigator.clipboard.writeText(formatChangesAsMarkdown(buildChangeSummary(current, diff)));
-      notice.textContent = 'Copied.';
-    } catch {
-      notice.textContent = 'Could not copy.';
-    }
-    setTimeout(() => { if (notice.isConnected) notice.textContent = ''; }, COPY_NOTICE_MS);
-  });
-  return [button, notice];
-};
-
-const createTools = (state, current, dispatch) => {
-  const hasChanges = Boolean(state.diff?.entries.length);
-  const previousButton = createButton('Previous change');
-  const nextButton = createButton('Next change');
-  const inspectButton = createButton('Select on preview', { attributes: { 'aria-pressed': String(state.isInspecting) } });
-  previousButton.disabled = nextButton.disabled = !hasChanges;
-  inspectButton.disabled = !hasChanges;
-  previousButton.addEventListener('click', () => dispatch({ type: 'step-change', offset: -1 }));
-  nextButton.addEventListener('click', () => dispatch({ type: 'step-change', offset: 1 }));
-  inspectButton.addEventListener('click', () => dispatch({ type: 'set-inspecting', isInspecting: !state.isInspecting }));
-  return createElement('div', { className: 'rs-tools' }, [previousButton, nextButton, inspectButton, ...createCopyButton(current, state.diff)]);
-};
-
-const createCategoryChips = (state, dispatch) => {
-  if (!state.diff?.entries.length) return null;
-  const options = [{ category: 'all', label: `All ${state.diff.entries.length}` }, ...countEntriesByCategory(state.diff.entries).map(({ category, count }) => ({ category, label: `${CATEGORY_LABELS[category]} ${count}` }))];
-  const chips = options.map(({ category, label }) => {
-    const chip = createButton(label, { className: 'rs-chip', attributes: { 'aria-pressed': String(state.categoryFilter === category) } });
-    chip.addEventListener('click', () => dispatch({ type: 'set-category-filter', category }));
-    return chip;
-  });
-  return createElement('div', { className: 'rs-chips', attributes: { role: 'group', 'aria-label': 'Filter changes by kind' } }, chips);
 };
 
 const createPropertyRows = (entry) => createElement('ul', { className: 'rs-props' }, entry.changes.map((change) => {
@@ -105,9 +64,7 @@ const createNotes = (current, notes) => {
 };
 
 export const renderChangesPanel = ({ state, current, notes, dispatch }) => {
-  const elements = [createSummary(state), createTools(state, current, dispatch)];
-  const chips = createCategoryChips(state, dispatch);
-  if (chips) elements.push(chips);
+  const elements = [createSummary(state)];
   if (state.diff) {
     const visibleIndexes = getVisibleChangeIndexes(state.diff, state.categoryFilter);
     elements.push(createElement('ol', { className: 'rs-changes' }, visibleIndexes.map((index) => createChangeRow(state.diff.entries[index], index, state, dispatch))));

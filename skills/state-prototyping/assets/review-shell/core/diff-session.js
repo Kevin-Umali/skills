@@ -4,10 +4,12 @@ import {
   DIFF_AFTER_INTERACTION_MS,
   DIFF_AFTER_RESIZE_MS,
   DIFF_DEBOUNCE_MS,
+  DIFF_MIN_INTERVAL_MS,
   DIFF_READY_MAX_POLLS,
   DIFF_SETTLE_MAX_POLLS,
   DIFF_SETTLE_PAUSE_MS,
   DIFF_SETTLE_POLL_MS,
+  OBSERVED_ATTRIBUTES,
 } from './constants.js';
 import { attachReasons, computeDiff } from './diff.js';
 
@@ -31,13 +33,17 @@ const isFrameReady = (frame) => Boolean(frame?.contentDocument?.body) && frame.d
  *   Called with the diff, or with null and a message when the previews could not be measured.
  */
 export const createDiffSession = ({ getMeasuredFrames, getReasons, onStart, onResult, onLayoutChange = () => {}, isEnabled = () => true }) => {
-  let timerId;
+  let timerId = 0;
   let runToken = 0;
+  let lastRunAt = 0;
   const observersByFrame = new Map();
   const sizeObserversByFrame = new Map();
 
   const run = async () => {
+    timerId = 0;
+    if (!isEnabled()) return;
     runToken += 1;
+    lastRunAt = Date.now();
     const token = runToken;
     onStart();
     const frames = getMeasuredFrames();
@@ -62,17 +68,32 @@ export const createDiffSession = ({ getMeasuredFrames, getReasons, onStart, onRe
     }
   };
 
+  // A newer request replaces a pending one: state, width and size changes are debounced.
   const schedule = (delayMs = DIFF_DEBOUNCE_MS) => {
     if (!isEnabled()) return;
     clearTimeout(timerId);
     timerId = setTimeout(run, delayMs);
   };
 
+  // A busy preview (a ticking clock, an animation) can mutate constantly. The first request wins and later ones
+  // wait for it, so the diff is measured at most twice a second instead of being pushed back forever.
+  const scheduleAfterMutation = () => {
+    if (!isEnabled() || timerId) return;
+    const sinceLastRun = Date.now() - lastRunAt;
+    timerId = setTimeout(run, Math.max(DIFF_AFTER_INTERACTION_MS, DIFF_MIN_INTERVAL_MS - sinceLastRun));
+  };
+
   // When the reviewer uses a preview, its DOM changes and the diff is measured again.
   const observe = (frame) => {
     observersByFrame.get(frame)?.disconnect();
-    const observer = new MutationObserver(() => schedule(DIFF_AFTER_INTERACTION_MS));
-    observer.observe(frame.contentDocument.body, { subtree: true, childList: true, attributes: true, characterData: true });
+    const observer = new MutationObserver(scheduleAfterMutation);
+    observer.observe(frame.contentDocument.body, {
+      subtree: true,
+      childList: true,
+      characterData: true,
+      attributes: true,
+      attributeFilter: OBSERVED_ATTRIBUTES,
+    });
     observersByFrame.set(frame, observer);
   };
 
@@ -86,14 +107,19 @@ export const createDiffSession = ({ getMeasuredFrames, getReasons, onStart, onRe
     sizeObserversByFrame.set(frame, sizeObserver);
   };
 
-  const attachFrame = (frame) => {
+  /**
+   * @param {HTMLIFrameElement} frame
+   * @param {{ isProbe?: boolean }} [options] The off-screen probe is only measured: its size is set from the visible
+   *   frame and its content is frozen, so it neither watches mutations nor resizes.
+   */
+  const attachFrame = (frame, { isProbe = false } = {}) => {
     const handleLoad = () => {
       frame.dataset.readyUrl = frame.getAttribute('src');
-      observe(frame);
+      if (!isProbe) observe(frame);
       schedule();
     };
     frame.addEventListener('load', handleLoad);
-    observeSize(frame);
+    if (!isProbe) observeSize(frame);
     return () => {
       frame.removeEventListener('load', handleLoad);
       observersByFrame.get(frame)?.disconnect();
@@ -105,6 +131,7 @@ export const createDiffSession = ({ getMeasuredFrames, getReasons, onStart, onRe
 
   const dispose = () => {
     clearTimeout(timerId);
+    timerId = 0;
     runToken += 1;
     observersByFrame.forEach((observer) => observer.disconnect());
     observersByFrame.clear();

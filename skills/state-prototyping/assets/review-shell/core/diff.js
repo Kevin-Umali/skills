@@ -13,19 +13,25 @@ import {
   TEXT_PROPERTY,
   TRANSPARENT_COLOR,
 } from './constants.js';
-import { describeElement, measureElement } from './measure.js';
+import { createMeasureCache, describeElement, measureElement } from './measure.js';
 
 const SIDE_SUFFIX_PATTERN = /-(top|right|bottom|left|inline|block)$/;
 
-// Elements are paired by id, then by position among same-tag siblings.
-const getElementKey = (element, keyCache) => {
-  if (keyCache.has(element)) return keyCache.get(element);
-  const parent = element.parentElement;
-  const sameTagSiblings = parent ? [...parent.children].filter((child) => child.tagName === element.tagName) : [element];
-  const position = `${element.tagName.toLowerCase()}:${sameTagSiblings.indexOf(element)}`;
-  const key = element.id ? `#${element.id}` : `${parent ? getElementKey(parent, keyCache) : ''}>${position}`;
-  keyCache.set(element, key);
-  return key;
+// Elements are paired by id, then by position among same-tag siblings. Keys are built in one pass over a document:
+// elements come in document order, so a parent's key exists before its children need it and each parent counts its children once.
+const buildElementKeys = (body, elements) => {
+  const keys = new Map([[body, 'body']]);
+  const tagCountsByParent = new WeakMap();
+  elements.forEach((element) => {
+    const parent = element.parentElement;
+    if (!tagCountsByParent.has(parent)) tagCountsByParent.set(parent, new Map());
+    const tagCounts = tagCountsByParent.get(parent);
+    const tagName = element.tagName.toLowerCase();
+    const position = tagCounts.get(tagName) ?? 0;
+    tagCounts.set(tagName, position + 1);
+    keys.set(element, element.id ? `#${element.id}` : `${keys.get(parent) ?? ''}>${tagName}:${position}`);
+  });
+  return keys;
 };
 
 const hasOwnText = (element) => [...element.childNodes].some((node) => node.nodeType === Node.TEXT_NODE && node.textContent.trim());
@@ -37,12 +43,12 @@ const isPainted = (element, values) =>
   Boolean(values['border-top-width'] && values['border-top-width'] !== '0px') ||
   Boolean(values['box-shadow'] && values['box-shadow'] !== 'none');
 
-const fillsParentWidth = (element) => {
+const fillsParentWidth = (element, cache) => {
   const parent = element.parentElement;
   if (!parent) return false;
-  const parentStyle = element.ownerDocument.defaultView.getComputedStyle(parent);
-  const parentContentWidth = parent.clientWidth - parseFloat(parentStyle.paddingLeft) - parseFloat(parentStyle.paddingRight);
-  return Math.abs(element.getBoundingClientRect().width - parentContentWidth) < FILL_PARENT_TOLERANCE_PX;
+  const parentValues = measureElement(parent, cache).values;
+  const parentContentWidth = parent.clientWidth - parseFloat(parentValues['padding-left']) - parseFloat(parentValues['padding-right']);
+  return Math.abs(measureElement(element, cache).box.width - parentContentWidth) < FILL_PARENT_TOLERANCE_PX;
 };
 
 // padding-top/right/bottom/left that changed the same way read as one change.
@@ -70,11 +76,11 @@ const mergeSideChanges = (changes) => {
   return merged;
 };
 
-const isNoise = ({ property, from, to, afterElement, beforeElement, afterValues, beforeValues, parentValues }) => {
+const isNoise = ({ property, from, to, afterElement, beforeElement, afterValues, beforeValues, parentValues, cache }) => {
   const tagName = afterElement.tagName.toLowerCase();
   const inheritedFromParent = INHERITED_PROPERTIES.includes(property) && parentValues.before[property] === from && parentValues.after[property] === to;
   const noBorderDrawn = property === 'border-top-color' && (beforeValues['border-top-width'] === '0px' || afterValues['border-top-width'] === '0px');
-  const followsParentWidth = property === 'width' && fillsParentWidth(afterElement) && fillsParentWidth(beforeElement);
+  const followsParentWidth = property === 'width' && fillsParentWidth(afterElement, cache) && fillsParentWidth(beforeElement, cache);
   const isSizeProperty = BOX_PROPERTIES.includes(property);
   const unpaintedWrapper = isSizeProperty && !isPainted(afterElement, afterValues) && !CONTROL_TAGS.has(tagName);
   const followsChildren = property === 'height' && afterElement.children.length > 0 && !CONTROL_TAGS.has(tagName);
@@ -83,25 +89,22 @@ const isNoise = ({ property, from, to, afterElement, beforeElement, afterValues,
 
 const getPropertyCategory = (property) => CATEGORY_BY_PROPERTY[property] ?? 'shape';
 
-const collectChanges = (beforeElement, afterElement) => {
-  const before = measureElement(beforeElement);
-  const after = measureElement(afterElement);
+const collectChanges = (beforeElement, afterElement, cache) => {
+  const before = measureElement(beforeElement, cache);
+  const after = measureElement(afterElement, cache);
   const parentValues = {
-    before: beforeElement.parentElement ? measureElement(beforeElement.parentElement).values : {},
-    after: afterElement.parentElement ? measureElement(afterElement.parentElement).values : {},
+    before: beforeElement.parentElement ? measureElement(beforeElement.parentElement, cache).values : {},
+    after: afterElement.parentElement ? measureElement(afterElement.parentElement, cache).values : {},
   };
   const properties = [...BOX_PROPERTIES, ...STYLE_PROPERTIES, TEXT_PROPERTY];
   const changes = properties
     .map((property) => ({ property, from: before.values[property] ?? '', to: after.values[property] ?? '' }))
     .filter(({ from, to }) => from !== to)
-    .filter((change) => !isNoise({ ...change, afterElement, beforeElement, afterValues: after.values, beforeValues: before.values, parentValues }));
-  return { before, after, changes: mergeSideChanges(changes) };
+    .filter((change) => !isNoise({ ...change, afterElement, beforeElement, afterValues: after.values, beforeValues: before.values, parentValues, cache }));
+  return mergeSideChanges(changes);
 };
 
-const isTinyBox = (element) => {
-  const box = element.getBoundingClientRect();
-  return box.width <= 1 && box.height <= 1;
-};
+const isTinyBox = ({ box }) => box.width <= 1 && box.height <= 1;
 
 const toEntry = (key, beforeElement, afterElement, changes) => {
   const categorizedChanges = changes.map((change) => ({ ...change, category: getPropertyCategory(change.property) }));
@@ -110,32 +113,36 @@ const toEntry = (key, beforeElement, afterElement, changes) => {
 };
 
 export const computeDiff = (beforeDocument, afterDocument) => {
-  const beforeKeys = new Map();
-  const afterKeys = new Map();
-  const beforeByKey = new Map([...beforeDocument.body.querySelectorAll('*')].map((element) => [getElementKey(element, beforeKeys), element]));
+  const cache = createMeasureCache();
+  const beforeElements = [...beforeDocument.body.querySelectorAll('*')];
+  const afterElements = [...afterDocument.body.querySelectorAll('*')];
+  const beforeKeys = buildElementKeys(beforeDocument.body, beforeElements);
+  const afterKeys = buildElementKeys(afterDocument.body, afterElements);
+  const beforeByKey = new Map(beforeElements.map((element) => [beforeKeys.get(element), element]));
   const seenKeys = new Set();
   const entries = [];
   const added = [];
 
-  [...afterDocument.body.querySelectorAll('*')]
+  afterElements
     .filter((element) => !element.closest(SKIPPED_TAGS))
     .forEach((afterElement) => {
-      const key = getElementKey(afterElement, afterKeys);
+      const key = afterKeys.get(afterElement);
       seenKeys.add(key);
       const beforeElement = beforeByKey.get(key);
-      const afterRendered = measureElement(afterElement).isRendered;
+      const afterMeasure = measureElement(afterElement, cache);
       if (!beforeElement) {
-        if (afterRendered) added.push({ label: describeElement(afterElement), afterElement });
+        if (afterMeasure.isRendered) added.push({ label: describeElement(afterElement), afterElement });
         return;
       }
-      if (!afterRendered && !measureElement(beforeElement).isRendered) return;
-      if (isTinyBox(beforeElement) && isTinyBox(afterElement)) return; // visually hidden helpers
-      const { changes } = collectChanges(beforeElement, afterElement);
+      const beforeMeasure = measureElement(beforeElement, cache);
+      if (!afterMeasure.isRendered && !beforeMeasure.isRendered) return;
+      if (isTinyBox(beforeMeasure) && isTinyBox(afterMeasure)) return; // visually hidden helpers
+      const changes = collectChanges(beforeElement, afterElement, cache);
       if (changes.length) entries.push(toEntry(key, beforeElement, afterElement, changes));
     });
 
   const removed = [...beforeByKey]
-    .filter(([key, element]) => !seenKeys.has(key) && !element.closest(SKIPPED_TAGS) && measureElement(element).isRendered)
+    .filter(([key, element]) => !seenKeys.has(key) && !element.closest(SKIPPED_TAGS) && measureElement(element, cache).isRendered)
     .map(([, element]) => ({ label: describeElement(element), beforeElement: element }));
   return { entries, added, removed };
 };

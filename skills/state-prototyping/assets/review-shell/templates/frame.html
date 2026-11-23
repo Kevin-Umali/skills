@@ -8,14 +8,15 @@
 <body>
   <main id="root"></main>
   <script type="module">
-    // The review shell loads this page with ?state, ?theme and ?reset. Render that state's fixture.
+    // Loaded by the shell with ?state, ?theme (light or dark) and ?reset.
+    // To switch state from inside: parent.postMessage({ type: 'prototype:select-state', id }, location.origin).
     import { states } from '../states.js';
 
     const params = new URLSearchParams(location.search);
     const state = states.find((candidate) => candidate.id === params.get('state')) ?? states[0];
     document.documentElement.dataset.theme = params.get('theme') === 'dark' ? 'dark' : 'light';
 
-    // Replace this with the real preview: render state.fixture using fake data and side effects only.
+    // Replace with the real preview of state.fixture (fake data and side effects only).
     document.getElementById('root').textContent = `${state.label}: ${JSON.stringify(state.fixture)}`;
   </script>
 </body>

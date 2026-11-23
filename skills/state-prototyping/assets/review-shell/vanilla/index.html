@@ -7,66 +7,82 @@
   <link rel="stylesheet" href="../core/shell.css">
 </head>
 <body>
-  <div class="rs" id="rs-root" data-inspector="closed" data-sidebar="open" data-changes="on" data-comparison="on">
-    <aside class="rs-side" id="rs-side" aria-label="States">
+  <div class="rs" id="rs-root" data-sidebar="open" data-inspector="closed" data-changes="on" data-comparison="on">
+    <aside class="rs-side" id="rs-side" data-region="sidebar" aria-label="State navigation">
       <div class="rs-brand"><h1>Prototype review</h1><span>Revision 1</span></div>
       <div class="rs-search">
         <label class="rs-sr" for="rs-query">Search states</label>
         <input id="rs-query" type="search" placeholder="Search states" autocomplete="off" spellcheck="false">
       </div>
-      <nav class="rs-list" id="rs-list" aria-label="State list"></nav>
-      <p class="rs-legend" data-feature="changes">
-        <span class="rs-mark rs-mark--own" aria-hidden="true"></span>Changed here
-        <span class="rs-mark rs-mark--area" aria-hidden="true"></span>Area-wide only
-      </p>
+      <div class="rs-list" id="rs-list" role="listbox" aria-label="States"></div>
       <div class="rs-foot">
         <span id="rs-count" role="status"></span>
-        <button type="button" class="rs-btn" id="rs-reset">Reset state</button>
+        <div class="rs-foot-actions">
+          <div class="rs-menu-wrap" data-feature="changes">
+            <button type="button" class="rs-icon-btn" id="rs-legend-button" aria-label="What the markers mean" aria-expanded="false" aria-controls="rs-legend-pop"><span data-icon="help"></span></button>
+            <div class="rs-pop rs-pop--up" id="rs-legend-pop" role="region" aria-label="Marker legend" hidden></div>
+          </div>
+          <button type="button" class="rs-btn" id="rs-reset">Reset state</button>
+        </div>
       </div>
     </aside>
+    <div class="rs-scrim" id="rs-scrim"></div>
 
     <main class="rs-main">
-      <header class="rs-top" id="rs-top">
-        <button type="button" class="rs-btn" id="rs-toggle-sidebar" aria-controls="rs-side" aria-pressed="true">Sidebar</button>
-        <div class="rs-group" data-feature="compare" role="group" aria-labelledby="rs-compare-label"><span class="rs-group-label" id="rs-compare-label">Compare</span><div class="rs-seg" id="rs-compare"></div></div>
-        <div class="rs-group" role="group" aria-labelledby="rs-width-label"><span class="rs-group-label" id="rs-width-label">Width</span><div class="rs-seg" id="rs-width"></div></div>
-        <div class="rs-group" role="group" aria-labelledby="rs-theme-label"><span class="rs-group-label" id="rs-theme-label">Theme</span><div class="rs-seg" id="rs-theme"></div></div>
-        <div class="rs-group" data-feature="changes" role="group" aria-labelledby="rs-highlight-label"><span class="rs-group-label" id="rs-highlight-label">Highlight</span><div class="rs-seg"><button type="button" class="rs-btn" id="rs-highlight" aria-pressed="true">Changes</button></div></div>
-        <div class="rs-top-end">
-          <span class="rs-note" id="rs-link-notice" role="status"></span>
-          <button type="button" class="rs-btn" id="rs-copy-link">Copy link</button>
-          <button type="button" class="rs-btn" data-feature="changes" id="rs-toggle-inspector" aria-controls="rs-inspector" aria-pressed="false">Changes<span class="rs-badge" id="rs-changes-count"></span></button>
+      <header class="rs-toolbar" id="rs-toolbar" data-region="toolbar" aria-label="Review controls">
+        <div class="rs-tb-group rs-tb-start">
+          <button type="button" class="rs-icon-btn" id="rs-toggle-sidebar" data-control="sidebar" aria-controls="rs-side" aria-expanded="true" aria-label="Hide sidebar"><span data-icon="sidebar"></span></button>
+          <div class="rs-crumb-wrap">
+            <button type="button" class="rs-crumb" id="rs-details" aria-expanded="false" aria-controls="rs-details-pop">
+              <span class="rs-crumb-text"><span class="rs-mute" id="rs-crumb-area"></span> / <span id="rs-crumb-state"></span></span>
+            </button>
+            <div class="rs-pop" id="rs-details-pop" role="region" aria-label="Fixture details" hidden></div>
+          </div>
+          <span class="rs-meta" id="rs-position"></span>
+          <button type="button" class="rs-icon-btn" id="rs-previous" aria-label="Previous state"><span data-icon="previous"></span></button>
+          <button type="button" class="rs-icon-btn" id="rs-next" aria-label="Next state"><span data-icon="next"></span></button>
+        </div>
+        <div class="rs-tb-group rs-tb-view" id="rs-view-controls"></div>
+        <div class="rs-tb-group rs-tb-end">
+          <button type="button" class="rs-icon-btn" id="rs-theme" data-control="theme"></button>
+          <button type="button" class="rs-btn" id="rs-changes" data-control="changes" data-feature="changes" aria-controls="rs-inspector" aria-pressed="false" aria-label="Changes"><span data-icon="changes"></span><span class="rs-btn-label">Changes</span><span class="rs-count-badge" id="rs-changes-count"></span></button>
+          <div class="rs-menu-wrap">
+            <button type="button" class="rs-btn" id="rs-share" data-control="share" aria-haspopup="menu" aria-expanded="false" aria-controls="rs-share-menu" aria-label="Share"><span data-icon="share"></span><span class="rs-btn-label" id="rs-share-label">Share</span></button>
+            <div class="rs-pop rs-pop--end rs-pop--menu" id="rs-share-menu" role="menu" aria-label="Share" hidden></div>
+            <div class="rs-pop rs-pop--end" id="rs-copy-pop" role="region" aria-label="Copy link" hidden></div>
+          </div>
         </div>
       </header>
 
-      <section class="rs-stage" aria-label="Preview">
+      <section class="rs-stage" id="rs-stage" data-region="stage" aria-label="Preview">
+        <div class="rs-notices" id="rs-notices"></div>
         <div class="rs-frames" id="rs-frames">
           <div class="rs-frame-wrap" id="rs-wrap-before">
-            <div class="rs-frame-head"><span>Before <span class="rs-hint">frozen</span></span><span>Fixture data, no network</span></div>
+            <div class="rs-frame-head"><span>Before</span><span class="rs-hint"> · frozen</span></div>
             <div class="rs-frame-body"><iframe id="rs-frame-before" title="Before preview"></iframe><div class="rs-hl" id="rs-hl-before"></div></div>
           </div>
           <div class="rs-frame-wrap" id="rs-wrap-after">
-            <div class="rs-frame-head"><span id="rs-after-heading">After <span class="rs-hint">editable</span></span><span>Fixture data, no network</span></div>
+            <div class="rs-frame-head"><span id="rs-after-name">After</span><span class="rs-hint" id="rs-after-hint"> · editable</span></div>
             <div class="rs-frame-body"><iframe id="rs-frame-after" title="After preview"></iframe><div class="rs-hl" id="rs-hl-after"></div></div>
           </div>
+          <div class="rs-divider" id="rs-divider" role="slider" tabindex="0" aria-label="Before and After divider" aria-orientation="horizontal" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" aria-valuetext="50% Before"><span class="rs-grip" id="rs-grip"></span></div>
         </div>
-        <iframe class="rs-probe" id="rs-probe" title="Off-screen measurement" aria-hidden="true" tabindex="-1"></iframe>
       </section>
-
-      <div class="rs-navigator">
-        <div class="rs-nav-pill">
-          <button type="button" class="rs-btn" id="rs-previous">Previous</button>
-          <button type="button" class="rs-btn rs-nav-title" id="rs-details" aria-expanded="false" aria-controls="rs-popover"><strong id="rs-title"></strong><span id="rs-position"></span></button>
-          <button type="button" class="rs-btn" id="rs-next">Next</button>
-          <div class="rs-pop" id="rs-popover" role="region" aria-label="Fixture details" hidden></div>
-        </div>
-      </div>
     </main>
 
-    <aside class="rs-inspector" data-feature="changes" id="rs-inspector" aria-label="Changes">
+    <aside class="rs-inspector" id="rs-inspector" data-region="inspector" data-feature="changes" aria-label="Changes">
       <div class="rs-insp-head">
-        <h2 class="rs-insp-title">Changes</h2>
-        <button type="button" class="rs-btn" id="rs-close-inspector" aria-label="Close changes">Close</button>
+        <div class="rs-insp-row">
+          <h2 class="rs-insp-title">Changes <span class="rs-count-badge" id="rs-insp-count"></span></h2>
+          <button type="button" class="rs-btn" id="rs-highlight" aria-pressed="true">Highlight</button>
+          <button type="button" class="rs-icon-btn" id="rs-close-inspector" aria-label="Close changes"><span data-icon="close"></span></button>
+        </div>
+        <div class="rs-chips" id="rs-chips" role="group" aria-label="Filter changes by kind"></div>
+        <div class="rs-insp-row">
+          <button type="button" class="rs-btn" id="rs-previous-change">Previous</button>
+          <button type="button" class="rs-btn" id="rs-next-change">Next</button>
+          <button type="button" class="rs-btn" id="rs-inspect" aria-pressed="false">Select on preview</button>
+        </div>
       </div>
       <div class="rs-insp-body" id="rs-inspector-body"></div>
     </aside>
