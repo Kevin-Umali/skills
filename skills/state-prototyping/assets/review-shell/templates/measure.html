@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>measure:running</title>
+  <style>
+    body { font: 13px/20px system-ui, sans-serif; margin: 16px; color: #21201c; }
+    h1 { font-size: 15px; margin: 0 0 8px; }
+    table { border-collapse: collapse; margin: 8px 0 16px; }
+    th, td { text-align: left; padding: 2px 12px 2px 0; vertical-align: top; }
+    #frames { position: absolute; left: -100000px; top: 0; }
+  </style>
+</head>
+<body>
+  <!-- ?mode=values|parity&state=<id>&theme=light|dark&width=<px>[&height=<px>]
+       Loads after/frame.html (values) or both frames (parity) at that width and checks them against spec.js.
+       Result: document.title becomes measure:pass or measure:fail, and #measure-result holds the JSON. -->
+  <h1 id="summary">Measuring…</h1>
+  <table id="failures" hidden><thead><tr><th>Kind</th><th>Element</th><th>Property</th><th>Expected or Before</th><th>Actual or After</th></tr></thead><tbody></tbody></table>
+  <script type="application/json" id="measure-result">null</script>
+  <div id="frames" aria-hidden="true"></div>
+  <script>
+    // A missing spec.js, states.js or core/ module never reaches the module below, so say so here.
+    const reportLoadError = (message) => {
+      document.getElementById('summary').textContent = `Error: ${message}`;
+      document.title = 'measure:error';
+    };
+    window.addEventListener('error', (event) => reportLoadError(event.message || 'a module failed to load'));
+  </script>
+  <script type="module" onerror="reportLoadError('a module failed to load; check spec.js, states.js and core/')">
+    import { states } from './states.js';
+    import * as spec from './spec.js';
+    import { readMeasureParams, runMeasure } from './core/spec-check.js';
+
+    const params = readMeasureParams(location.search);
+    const result = await runMeasure({ container: document.getElementById('frames'), states, spec, params });
+
+    document.getElementById('measure-result').textContent = JSON.stringify(result, null, 2);
+    window.measureResult = result;
+    document.getElementById('summary').textContent =
+      `${result.pass ? 'Pass' : 'Fail'}: ${result.mode}, ${result.state}, ${result.theme}, ${result.width}px. ${result.checked} checked, ${result.failures.length} failing.`;
+    const rows = result.failures.map((failure) => [
+      failure.kind,
+      failure.element ?? failure.selector ?? failure.font ?? '',
+      failure.property ?? failure.problem ?? '',
+      failure.expected ?? failure.before ?? '',
+      failure.actual ?? failure.after ?? '',
+    ]);
+    const body = document.querySelector('#failures tbody');
+    rows.forEach((cells) => {
+      const row = body.insertRow();
+      cells.forEach((text) => { row.insertCell().textContent = text; });
+    });
+    document.getElementById('failures').hidden = !rows.length;
+    document.title = result.pass ? 'measure:pass' : 'measure:fail';
+  </script>
+</body>
+</html>

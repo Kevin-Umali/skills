@@ -147,7 +147,7 @@ export const computeDiff = (beforeDocument, afterDocument) => {
   return { entries, added, removed };
 };
 
-const toBaseProperty = (property) => property.replace(SIDE_SUFFIX_PATTERN, '');
+export const toBaseProperty = (property) => property.replace(SIDE_SUFFIX_PATTERN, '');
 
 // Agent-written reasons are matched by selector and, optionally, by property.
 export const findReasons = (entry, reasons) => {
