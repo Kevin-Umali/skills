@@ -17,3 +17,4 @@ jobs:
         with:
           node-version: 22
       - run: npm run check-frontmatter
+      - run: npm run check-plugin

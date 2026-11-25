@@ -31,6 +31,12 @@ Hooks (`state-prototyping`)
 - New `scripts/hook-check.mjs`: after an edit inside a prototype, runs `check-prototype` and feeds its errors back to the agent (exit 2). It reads both Claude Code's edit input and Codex's `apply_patch` input, and stays silent for edits outside a prototype.
 - `SKILL.md` registers it as a Claude Code `PostToolUse` hook once the skill is invoked, and pre-approves the skill's own scripts with `allowed-tools`. Other agents ignore both fields.
 
+Plugin
+
+- The repo is now a plugin, `kevin-umali-skills`, for Claude Code (`.claude-plugin/`) and Codex (`.codex-plugin/`, `.agents/plugins/marketplace.json`), with a marketplace for each. Install commands are in the README.
+- Codex has no hooks inside skills, so the plugin ships `hooks/codex-hooks.json` with the same edit check. It isn't at `hooks/hooks.json`, which Claude Code would also load and run twice.
+- New `npm run check-plugin` (also in CI) checks that the manifests' `name` and `version` match `package.json` and that their paths exist. Releases now bump all three versions.
+
 ## 0.1.3
 
 Review shell (layout)

@@ -18,6 +18,18 @@ npx skills update                                             # pull the latest
 npx skills remove state-prototyping
 ```
 
+Or install everything as a plugin, which also adds the state-prototyping edit check as a hook:
+
+```bash
+claude plugin marketplace add Kevin-Umali/skills && claude plugin install kevin-umali-skills@kevin-umali
+```
+
+```bash
+codex plugin marketplace add Kevin-Umali/skills && codex plugin add kevin-umali-skills@kevin-umali
+```
+
+Codex asks you to review the plugin's hook in `/hooks` before it runs.
+
 Prefer no tooling? Clone the repo and symlink a skill into your agent's skills folder, so `git pull` keeps it current:
 
 ```bash
@@ -38,12 +50,13 @@ Prototype a screen or flow with realistic states (loading, empty, error, success
 - On approval the files move into the project, and a parity check confirms the shipped screen matches the prototype.
 - Starters for plain HTML and React on one shared core, scripts to set up, check and measure a prototype, and an optional Vite plugin.
 - It asks first: design references, helper skills and MCP servers, a side-by-side comparison, and highlights.
-- In Claude Code, a hook checks the prototype after each edit and reports problems to the agent.
+- A hook checks the prototype after each edit and reports problems to the agent: in Claude Code once the skill is used, in Codex when installed as the plugin.
 
 ## Develop
 
 ```bash
 npm run check-frontmatter
+npm run check-plugin
 ```
 
 Each skill is a folder under `skills/` with a `SKILL.md`. Conventions for editing are in [AGENTS.md](./AGENTS.md). Changes are listed in [CHANGELOG.md](./CHANGELOG.md).

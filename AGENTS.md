@@ -2,7 +2,7 @@ Each skill is a folder under `skills/<skill-name>/` containing a `SKILL.md`. The
 
 Supporting files live beside `SKILL.md` in `references/`, `assets/` and `agents/`, and are linked from `SKILL.md` with relative paths.
 
-When you add, rename or remove a skill, update the Skills list in `README.md` (skill name linked to its `SKILL.md`). Add changes to `CHANGELOG.md` under `## Unreleased` as you go. Bump `package.json` once per release, never per edit. To release, rename `## Unreleased` to the new version, bump `package.json`, and push to main: the release workflow tags `v<version>` and publishes the GitHub release from that changelog section.
+When you add, rename or remove a skill, update the Skills list in `README.md` (skill name linked to its `SKILL.md`). Add changes to `CHANGELOG.md` under `## Unreleased` as you go. Bump `package.json` once per release, never per edit. To release, rename `## Unreleased` to the new version, bump `version` in `package.json`, `.claude-plugin/plugin.json` and `.codex-plugin/plugin.json` (`npm run check-plugin` confirms they match), and push to main: the release workflow tags `v<version>` and publishes the GitHub release from that changelog section.
 
 Run `npm run check-frontmatter` after touching any `SKILL.md`.
 

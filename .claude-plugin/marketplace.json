@@ -1,0 +1,12 @@
+{
+  "name": "kevin-umali",
+  "owner": { "name": "Kevin Umali" },
+  "description": "Kevin Umali's agent skills for Claude Code.",
+  "plugins": [
+    {
+      "name": "kevin-umali-skills",
+      "source": "./",
+      "description": "Kevin Umali's agent skills, including state-prototyping."
+    }
+  ]
+}

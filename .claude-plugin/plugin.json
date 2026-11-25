@@ -1,0 +1,10 @@
+{
+  "name": "kevin-umali-skills",
+  "version": "0.1.3",
+  "description": "Kevin Umali's agent skills, including state-prototyping: prototype UI states as real project code, then move the approved code into the project.",
+  "author": { "name": "Kevin Umali" },
+  "homepage": "https://github.com/Kevin-Umali/skills",
+  "repository": "https://github.com/Kevin-Umali/skills",
+  "license": "MIT",
+  "keywords": ["skills", "prototyping", "ui-states", "design-review"]
+}
