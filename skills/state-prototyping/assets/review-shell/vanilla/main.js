@@ -4,7 +4,8 @@ import { MEASURE_TRIGGER_ACTIONS, getRenderParts } from '../core/render-scopes.j
 import { createInitialState, reviewReducer } from '../core/review-reducer.js';
 import { createFrameScheduler, createThrottledCall } from '../core/scheduling.js';
 import { buildSearchFromView, readViewFromSearch } from '../core/view-state.js';
-import { areas, states } from '../states.js';
+import { orderStatesByArea } from '../core/registry.js';
+import { areas, states as registryStates } from '../states.js';
 import { notes, reasons } from '../notes.js';
 import { createAnnouncer } from './announcer.js';
 import { hydrateIcons } from './dom.js';
@@ -16,6 +17,8 @@ import { createReviewData } from './review-data.js';
 import { createSidebar } from './sidebar.js';
 import { createStore } from './store.js';
 import { createToolbar } from './toolbar.js';
+
+const states = orderStatesByArea(areas, registryStates);
 
 // An empty registry has nothing to review. Say so instead of failing with a stack trace.
 if (!states.length) {

@@ -7,6 +7,11 @@ export const findState = (states, stateId) => states.find((state) => state.id ==
 
 export const getAreaLabel = (areas, areaId) => areas.find((area) => area.id === areaId)?.label ?? areaId;
 
+export const orderStatesByArea = (areas, states) => [
+  ...areas.flatMap((area) => states.filter((state) => state.area === area.id)),
+  ...states.filter((state) => !areas.some((area) => area.id === state.area)),
+];
+
 export const getAdjacentState = (states, stateId, offset) => {
   const index = states.findIndex((state) => state.id === stateId);
   return states[index + offset] ?? null;

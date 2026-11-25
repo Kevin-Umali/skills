@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import '../core/shell.css';
 import { CHANGES_ACTIVE, COMPARISON_ENABLED } from '../core/constants.js';
+import { orderStatesByArea } from '../core/registry.js';
 import { readViewFromSearch } from '../core/view-state.js';
 import { Inspector } from './components/Inspector';
 import { LiveRegion } from './components/LiveRegion';
@@ -72,8 +73,9 @@ const ReviewShellContent = ({ areas, states, notes, reasons }: ReviewShellProps)
 };
 
 // Complete review shell. It matches the vanilla starter: same reducer, same measured diff, same markup and styles.
-export const ReviewShell = (props: ReviewShellProps) => (
-  props.states.length
-    ? <ReviewShellContent {...props} />
-    : <p>states.js has no states yet. Add the first one, then reload.</p>
-);
+export const ReviewShell = (props: ReviewShellProps) => {
+  const states = useMemo(() => orderStatesByArea(props.areas, props.states), [props.areas, props.states]);
+  return states.length
+    ? <ReviewShellContent {...props} states={states} />
+    : <p>states.js has no states yet. Add the first one, then reload.</p>;
+};

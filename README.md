@@ -18,6 +18,18 @@ npx skills update                                             # pull the latest
 npx skills remove state-prototyping
 ```
 
+Or install everything as a plugin, which also adds the state-prototyping edit check as a hook:
+
+```bash
+claude plugin marketplace add Kevin-Umali/skills && claude plugin install kevin-umali-skills@kevin-umali
+```
+
+```bash
+codex plugin marketplace add Kevin-Umali/skills && codex plugin add kevin-umali-skills@kevin-umali
+```
+
+Codex asks you to review the plugin's hook in `/hooks` before it runs.
+
 Prefer no tooling? Clone the repo and symlink a skill into your agent's skills folder, so `git pull` keeps it current:
 
 ```bash
@@ -28,18 +40,23 @@ ln -s "$PWD/skills/state-prototyping" ~/.claude/skills/state-prototyping
 
 ### [state-prototyping](./skills/state-prototyping/SKILL.md)
 
-Build an editable UI prototype with selectable, realistic application states, and review it before building it for real. Invoke it with `/state-prototyping` in Claude Code or `$state-prototyping` in Codex.
+Prototype a screen or flow with realistic states (loading, empty, error, success) to review before building it. Changes are written as real project code, so the approved prototype moves into the codebase instead of being rebuilt. Invoke it with `/state-prototyping` in Claude Code or `$state-prototyping` in Codex.
 
-- Real states (loading, empty, error, success, conflict) from fictional fixtures, with no live calls.
-- A review shell around them: searchable states, width and theme switching, and Before and After side by side.
+- Real states from fictional fixtures, with no live calls.
+- A review shell: searchable states, width and theme switching, and the current screen beside the proposed one.
 - Optional highlights that outline what changed, list each change as `height 48px → 36px`, and give the reason.
-- Starters for plain HTML and for React on one shared core, plus scripts that set up and check a prototype.
-- It asks first: design references, helper skills and MCP servers, Before and After, and highlights.
+- Proposed changes are copies of the project's own files, kept in the prototype until approval and written in its styling, tokens and components.
+- The numbers each change must render live in one `spec.js` and are measured in the page, not read from class names.
+- On approval the files move into the project, and a parity check confirms the shipped screen matches the prototype.
+- Starters for plain HTML and React on one shared core, scripts to set up, check and measure a prototype, and an optional Vite plugin.
+- It asks first: design references, helper skills and MCP servers, a side-by-side comparison, and highlights.
+- A hook checks the prototype after each edit and reports problems to the agent: in Claude Code once the skill is used, in Codex when installed as the plugin.
 
 ## Develop
 
 ```bash
 npm run check-frontmatter
+npm run check-plugin
 ```
 
 Each skill is a folder under `skills/` with a `SKILL.md`. Conventions for editing are in [AGENTS.md](./AGENTS.md). Changes are listed in [CHANGELOG.md](./CHANGELOG.md).

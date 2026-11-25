@@ -13,10 +13,10 @@ import {
 } from './constants.js';
 import { attachReasons, computeDiff } from './diff.js';
 
-const wait = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
+export const wait = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
 
 // Entrance motion is still running. Endless animations (spinners) never settle, so they are ignored.
-const hasPendingMotion = (frameDocument) =>
+export const hasPendingMotion = (frameDocument) =>
   frameDocument.getAnimations().some((animation) => animation.playState === 'running' && animation.effect?.getComputedTiming().endTime !== Infinity);
 
 const isFrameReady = (frame) => Boolean(frame?.contentDocument?.body) && frame.dataset.readyUrl === frame.getAttribute('src');

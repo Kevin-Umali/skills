@@ -34,6 +34,13 @@ const readElement = (element) => {
   return { values, isRendered, box: { width: box.width, height: box.height } };
 };
 
+export const readRenderedValue = (element, property) => {
+  if (property === 'width' || property === 'height') return `${roundToTenth(element.getBoundingClientRect()[property])}px`;
+  return formatColor(element.ownerDocument.defaultView.getComputedStyle(element).getPropertyValue(property).trim());
+};
+
+export const normalizeColor = (value) => formatColor(String(value).trim());
+
 export const measureElement = (element, cache) => {
   if (!cache) return readElement(element);
   if (!cache.has(element)) cache.set(element, readElement(element));

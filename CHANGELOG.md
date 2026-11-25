@@ -2,6 +2,43 @@
 
 ## Unreleased
 
+## 0.1.4
+
+Production-shaped After (`state-prototyping`)
+
+- The After is production code written early. Changed files live in `<prototype>/mirror/` at their project paths, in the project's styling system, tokens and components; unchanged modules are imported. On approval they move into the project instead of being rebuilt.
+- Why: in a real implementation, an After built from source rewrites and override CSS (`!important`, `[data-prototype-variant]`) left nothing to copy, raw values skipped the theme scale, rewrites broke when production changed, notes contradicted the code, and "matches the prototype" had no definition.
+- After views take a view model and callbacks; views that fetch are split into view and container. New tokens and shared components go into their mirror files first.
+- New `spec.js`, one place for numbers: `values` (rendered CSS per area, optional `states` and `themes`), `differences` (what production deliberately keeps) and `moves` (mirror path, project path, kind, base hash, container hook). `notes.js` no longer holds numbers.
+- New `measure.html` and `core/spec-check.js`, shared by both starters. Mode `values` checks the After against `spec.values` and font loads; mode `parity` diffs Before and After with `computeDiff` and fails outside `spec.differences`. An area locks only when values pass.
+- New scripts: `mirror-file.mjs` mirrors a production file and prints its move and hash; `measure-prototype.mjs` serves the prototype itself (Vite or static), runs every state, theme and width headless with the project's Playwright, and groups failures per element.
+- Vite projects get a prototype-only `vite.config.mjs`: the project's config plus a mirror plugin, with `STUBS` to give a Before view a fixture instead of its data hook. The project's own config is not touched.
+- `check-prototype` validates `spec.js`, errors on patches in the mirror and on Before importing it, and warns on stale mirrors and on numbers in notes.
+- New references `build.md` and `apply.md`. Apply moves tokens, shared, views and containers in order and runs parity until clean.
+
+Found by a trial (old and new skill on the same React, Vite and Tailwind task)
+
+- The shell is now copied to `shell/`: a folder named `react/` hid the `react` package. React prototypes get a host page (`shell/index.html`).
+- Previous and Next follow the sidebar's area order instead of the order in `states.js`.
+- `init-prototype` prints only next steps (274 words down to 88); the templates document their own shapes.
+- Skill text cut: the default reading path is 1,520 words, down from 2,271 in 0.1.3. `production-shaped-after.md`, `review-shell.md` and `exploration-and-verification.md` became `build.md` and `explore-and-verify.md`, and `perspectives.md` is optional.
+- Plainer skill description, README summary and Codex agent card.
+- React frames are `frame.html` plus `frame.tsx`, since an inline module script can't hold JSX.
+- `mirror-file --new` starts a mirror file production doesn't have yet. Splitting a fetching view keeps its file as the container, so callers don't change.
+- `build.md` gives a tsconfig `paths` recipe for type-checking the mirror.
+- `core/package.json` marks the shared core as ES modules, so Node loads it without a warning. Code comments trimmed to the ones that say why.
+
+Hooks (`state-prototyping`)
+
+- New `scripts/hook-check.mjs`: after an edit inside a prototype, runs `check-prototype` and feeds its errors back to the agent (exit 2). It reads both Claude Code's edit input and Codex's `apply_patch` input, and stays silent for edits outside a prototype.
+- `SKILL.md` registers it as a Claude Code `PostToolUse` hook once the skill is invoked, and pre-approves the skill's own scripts with `allowed-tools`. Other agents ignore both fields.
+
+Plugin
+
+- The repo is now a plugin, `kevin-umali-skills`, for Claude Code (`.claude-plugin/`) and Codex (`.codex-plugin/`, `.agents/plugins/marketplace.json`), with a marketplace for each. Install commands are in the README.
+- Codex has no hooks inside skills, so the plugin ships `hooks/codex-hooks.json` with the same edit check. It isn't at `hooks/hooks.json`, which Claude Code would also load and run twice.
+- New `npm run check-plugin` (also in CI) checks that the manifests' `name` and `version` match `package.json` and that their paths exist. Releases now bump all three versions.
+
 ## 0.1.3
 
 Review shell (layout)

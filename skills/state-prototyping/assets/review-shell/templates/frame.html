@@ -16,7 +16,8 @@
     const state = states.find((candidate) => candidate.id === params.get('state')) ?? states[0];
     document.documentElement.dataset.theme = params.get('theme') === 'dark' ? 'dark' : 'light';
 
-    // Replace with the real preview of state.fixture (fake data and side effects only).
+    // Replace with the real preview of state.fixture (fake data and side effects only), passed to the view as its view model.
+    // Before imports the production view unchanged. After imports the mirror copy, from ../mirror/ plus the view's project path.
     document.getElementById('root').textContent = `${state.label}: ${JSON.stringify(state.fixture)}`;
   </script>
 </body>
