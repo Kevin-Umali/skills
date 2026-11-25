@@ -1,6 +1,13 @@
 ---
 name: state-prototyping
 description: Prototype a screen or flow with realistic states (loading, empty, error, success) to review before building it. Changes are written as real project code, so the approved prototype moves into the codebase instead of being rebuilt. Use when asked to prototype, mock up or review UI states before implementing.
+allowed-tools: Bash(node ${CLAUDE_SKILL_DIR}/scripts/*)
+hooks:
+  PostToolUse:
+    - matcher: "Write|Edit|MultiEdit"
+      hooks:
+        - type: command
+          command: 'node "${CLAUDE_PLUGIN_ROOT}/$(test -f "${CLAUDE_PLUGIN_ROOT}/SKILL.md" || echo skills/state-prototyping/)scripts/hook-check.mjs"'
 ---
 
 # State prototyping
@@ -11,12 +18,12 @@ Don't change production until the user approves. Work in `.state-prototype/<flow
 
 ## Scripts
 
-In `scripts/`; run them, don't read them. All print JSON; `--help` shows usage. Exit 2 means problems.
+Run them as `node ${CLAUDE_SKILL_DIR}/scripts/<name>` (the `scripts/` folder beside this file); don't read them. All print JSON; `--help` shows usage. Exit 2 means problems.
 
 - `detect-context.mjs [dir]`: frameworks and design references.
 - `init-prototype.mjs <dir> --stack react|vanilla [--states <file.json>] [--no-comparison] [--no-highlights]`: shell in `shell/`, templates, frames, `spec.js`, `measure.html`, `mirror/`, and a prototype-only `vite.config.mjs` for Vite projects. Templates show their shapes; the output lists next steps.
 - `mirror-file.mjs <dir> <project-file> [--kind token|shared|view|container] [--hook <name>] [--new]`: copies a production file into `mirror/` (or starts a new one) and prints its move.
-- `check-prototype.mjs <dir>`: validates the registry, notes and spec, and flags patches and stale mirrors. Run after every edit.
+- `check-prototype.mjs <dir>`: validates the registry, notes and spec, and flags patches and stale mirrors. Run after every edit; in Claude Code a hook runs it for you and reports errors.
 - `measure-prototype.mjs <dir> --mode values|parity`: serves the prototype and checks every state, theme and width headless (needs Playwright in the project; otherwise prints the URLs).
 
 ## Ask once

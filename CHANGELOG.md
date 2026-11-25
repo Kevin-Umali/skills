@@ -26,6 +26,11 @@ Found by a trial (old and new skill on the same React, Vite and Tailwind task)
 - `build.md` gives a tsconfig `paths` recipe for type-checking the mirror.
 - `core/package.json` marks the shared core as ES modules, so Node loads it without a warning. Code comments trimmed to the ones that say why.
 
+Hooks (`state-prototyping`)
+
+- New `scripts/hook-check.mjs`: after an edit inside a prototype, runs `check-prototype` and feeds its errors back to the agent (exit 2). It reads both Claude Code's edit input and Codex's `apply_patch` input, and stays silent for edits outside a prototype.
+- `SKILL.md` registers it as a Claude Code `PostToolUse` hook once the skill is invoked, and pre-approves the skill's own scripts with `allowed-tools`. Other agents ignore both fields.
+
 ## 0.1.3
 
 Review shell (layout)

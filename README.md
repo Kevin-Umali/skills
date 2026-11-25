@@ -38,6 +38,7 @@ Prototype a screen or flow with realistic states (loading, empty, error, success
 - On approval the files move into the project, and a parity check confirms the shipped screen matches the prototype.
 - Starters for plain HTML and React on one shared core, scripts to set up, check and measure a prototype, and an optional Vite plugin.
 - It asks first: design references, helper skills and MCP servers, a side-by-side comparison, and highlights.
+- In Claude Code, a hook checks the prototype after each edit and reports problems to the agent.
 
 ## Develop
 
