@@ -1,8 +1,9 @@
 #!/usr/bin/env node
-// Checks a prototype's states.js and notes.js for the mistakes that fail silently: unknown ids, empty reasons, missing frames.
 import { existsSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { checkSpec } from './lib/check-spec.mjs';
+import { loadModuleIfPresent, readProjectRoot } from './lib/prototype-files.mjs';
 
 const REQUIRED_STATE_FIELDS = ['id', 'area', 'label', 'description'];
 const RECOMMENDED_STATE_FIELDS = ['owner', 'boundary', 'limits', 'fixture']; // shown in the fixture details and read by the frame
@@ -11,7 +12,9 @@ const EXIT_PROBLEMS = 2;
 
 const HELP = `Usage: node check-prototype.mjs [prototype-dir]   (default: current directory)
 
-Validates states.js and notes.js and looks for before/frame.html and after/frame.html. Prints JSON.
+Validates states.js, notes.js and spec.js, scans mirror/ for patches (override CSS, variant selectors,
+runtime branches on which frame is showing, imports into the prototype), warns when a mirrored production file
+changed since its base hash, and looks for before/frame.html and after/frame.html. Prints JSON.
 Exit codes: 0 no problems, ${EXIT_PROBLEMS} problems found (listed in "errors"), 1 the files could not be loaded.`;
 
 const [directoryArgument = '.'] = process.argv.slice(2);
@@ -71,5 +74,12 @@ const statesWithoutNotes = stateIds.filter((id) => !(notes.states ?? {})[id]?.le
 if (!isSinglePreview && !isTrackingOff && hasNotes && statesWithoutNotes.length) warnings.push(`notes.js: no notes.states entry for ${statesWithoutNotes.length} state(s): ${listIds(statesWithoutNotes)}.`);
 (isSinglePreview ? ['after'] : ['before', 'after']).filter((side) => !existsSync(join(directory, side, 'frame.html'))).forEach((side) => warnings.push(`${side}/frame.html not found.`));
 
-console.log(JSON.stringify({ ok: !errors.length, counts: { areas: areas.length, states: states.length, reasons: reasons.length }, errors, warnings }, null, 2));
+const spec = await loadModuleIfPresent(directory, 'spec.js').catch((error) => {
+  errors.push(`spec.js: could not load: ${error.message}`);
+  return undefined;
+});
+const { staleMirrors, ...specCounts } = checkSpec({ spec, notes, reasons, areaIds, stateIds, prototypeDirectory: directory, projectRoot: readProjectRoot(directory, spec), errors, warnings });
+if (spec && !existsSync(join(directory, 'measure.html'))) warnings.push('measure.html not found. Rerun init-prototype.mjs to add it.');
+
+console.log(JSON.stringify({ ok: !errors.length, counts: { areas: areas.length, states: states.length, reasons: reasons.length, ...specCounts }, staleMirrors, errors, warnings }, null, 2));
 if (errors.length) process.exit(EXIT_PROBLEMS);
