@@ -1,57 +1,35 @@
-# Worked example: billing settings
+# Worked example: billing page
 
-An invented example of the whole workflow. Take the method, not the details.
+Invented, to show the method.
 
-**Request:** "Prototype the billing settings screen so we can review it before changing anything." The app exists: it loads the plan from a backend, lets the user change the card, and lists invoices.
+**Request:** "Prototype the billing page before we change it: a quieter plan card, a compact Save button, the card error inline." React, Vite and Tailwind with a token file. `BillingPage` calls `useBilling()` itself.
 
-## 1. Explore
+## States
 
-| Piece | Owner | Boundary |
+| Area | State | Shows |
 | --- | --- | --- |
-| Plan and invoices | `useBilling()` hook | Network |
-| Card form | `CardDialog` | Payment provider SDK |
-| Invoice PDF | `InvoiceRow` | Native file save |
+| Page | `page-loading`, `page-error`, `page-default`, `page-no-invoices` | Load pending, failure with retry, normal, empty list |
+| Card | `card-declined`, `card-saving` | Decline with draft kept, submit pending |
 
-## 2. Inventory
+## Build
 
-| Area | State id | Shows |
-| --- | --- | --- |
-| Page | `page-loading` | Request in flight, held pending |
-| Page | `page-error` | Load failed, retry offered |
-| Page | `page-empty` | New account, no invoices |
-| Card | `card-dialog-open` | Empty form |
-| Card | `card-declined` | Provider rejected the card, draft kept |
-| Card | `card-saving` | Submit pending, spinner in the button, same size |
-| Invoices | `invoices-list` | Normal list |
-| Invoices | `invoices-download-unavailable` | Native save not available here |
-
-One state per user-visible branch, not per boolean combination.
-
-## 3. Build
-
-- Import the real `BillingPage`, `CardDialog` and `InvoiceRow` with their styles and tokens.
-- Fake only data and side effects: a fixture `useBilling()` with fictional deterministic data and in-memory callbacks.
-- `page-loading` and `card-saving` stay pending, with no request.
-- `card-declined` keeps the typed draft and shows the decline, as the real screen does.
-- `invoices-download-unavailable` says the native save is unavailable and fakes no success.
-
-## 4. Review
-
-Run `init-prototype --states`, fill the fixtures and `notes.js`, run `check-prototype`. Choose Split with highlights. After the Card area is changed and approved, add it to `lockedAreas`.
-
-An entry in the Changes inspector, with the agent's reason from `notes.js`:
-
-```text
-3  button #save
-   height   48px → 36px
-   background-color   #4338ca → #21201c
-   Why: One black primary action says "do this next". Indigo had no brand behind it.
-```
+- `init-prototype .state-prototype/billing --stack react --states states.json`.
+- **Before** renders production `BillingPage`. `STUBS` maps `src/billing/useBilling.ts` to a fixture hook.
+- **After:** `mirror-file.mjs` copies `Button.tsx` (shared: an `sm` size) and `BillingPage.tsx` (now the container, `hook: 'useBilling'`), and `--new` starts `BillingView.tsx` (the markup, taking a view model). The After frame renders `BillingView` with the fixture's view model.
+- Classes come from the theme (`text-sm`, `bg-ink`), never raw values.
 
 ```js
-{ selector: '#save', props: ['background-color'], why: 'One black primary action says "do this next".' }
+// spec.js
+export const values = [
+  { area: 'card', selector: '#save-card', expected: { height: '36px', 'font-size': '14px', 'line-height': '20px' } },
+  { area: 'card', selector: '#card-error', expected: { color: '#b42318' }, states: ['card-declined'], themes: ['light'] },
+];
 ```
 
-## 5. Report
+`measure-prototype --mode values` first fails with `line-height 24px, expected 20px` (a raw size class kept the old line height); `text-sm` fixes it. Card locks.
 
-Checked: every state at Desktop and Phone widths, both themes, dialog keyboard focus. Not verified: the payment SDK, native file save, real network. Production source unchanged.
+## Apply
+
+`check-prototype` reports `Button.tsx` stale, so the production change is merged into the mirror. Moves: Button, then BillingView, then BillingPage; `main.tsx` is unchanged. Before drops its stub and renders the moved `BillingView` with the same view model as After. Parity shows one failure, a class lost in a merge, fixed in production. Then `mirror/` and the fixtures are deleted.
+
+**Report:** all states at four widths and both themes, values and parity passing. Not verified: the payment provider and real network.

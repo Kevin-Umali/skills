@@ -2,7 +2,7 @@
 
 The full behavior of the review shell. The starters already implement it, so read this only to change the shell or to write a view layer for another stack. Design it for the reviewer (find and click fast), the developer (adapt it) and an agent (read its output): see [perspectives](perspectives.md).
 
-Behavior lives in `core/` and the view layers only render it, so both starters behave the same: change it in `core/`, never in one starter. Which module owns what:
+`init-prototype` copies the chosen starter (`vanilla/` or `react/`, plus a host page for React) into the prototype's `shell/`. Behavior lives in `core/` and the view layers only render it, so both starters behave the same: change it in `core/`, never in one starter. Which module owns what:
 
 | Module | Owns |
 | --- | --- |
@@ -12,7 +12,8 @@ Behavior lives in `core/` and the view layers only render it, so both starters b
 | `review-reducer.js` | Every state change, as one reducer. `render-scopes.js` says which parts an action touches |
 | `slider.js`, `stage-notices.js`, `scroll-sync.js` | Slider math and keys, inline notices, two-frame scroll mirroring |
 | `diff.js`, `measure.js`, `diff-session.js` | The measured diff, its per-run cache, when to measure |
-| `highlight-geometry.js`, `export-changes.js`, `registry.js` | Boxes, badges and their placement, Markdown and JSON, registry helpers |
+| `highlight-geometry.js`, `export-changes.js`, `registry.js` | Boxes, badges and their placement, Markdown and JSON, registry helpers (state order follows the areas) |
+| `spec-check.js` | `measure.html`: frames at a fixed width, `spec.values` and font checks, parity against `spec.differences` |
 | `icons.js`, `scheduling.js`, `shell.css` | Icon artwork, frame and throttle helpers, all styles |
 
 ## Layout
